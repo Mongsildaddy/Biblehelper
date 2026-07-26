@@ -60,6 +60,11 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .occmore{width:100%;background:#232842;border:1px dashed #454b6b;color:#8b91ad;padding:7px;font-family:inherit;font-size:12px;cursor:pointer;margin-top:8px;border-radius:3px}
 .occmore:hover{color:var(--gold-lite);border-color:var(--gold-lite)}
 .occload{font-size:13px;color:#8b91ad;padding:8px 0}
+.kodef{font-size:14px;line-height:1.75;color:#e4e8f7}
+.endef{font-size:13px;line-height:1.6;color:#aeb5cf;font-family:Georgia,serif;margin-top:8px}
+.cutmark{color:var(--pending);font-size:11px;font-style:italic;white-space:nowrap}
+.minibtn{display:inline-block;margin-top:9px;background:#232842;border:1px solid #454b6b;color:#b7bdd6;font-family:inherit;font-size:12px;padding:5px 10px;border-radius:3px;cursor:pointer;text-decoration:none}
+.minibtn:hover{border-color:var(--gold-lite);color:var(--gold-lite)}
 .verse.hl{background:#fff6d8;box-shadow:0 0 0 8px #fff6d8;border-radius:2px;transition:background 1s,box-shadow 1s}
 .chip.hl{background:#ffeaa0;border-bottom-color:var(--gold)}
 @media(max-width:560px){.panel{width:100%;max-width:100%;top:auto;bottom:0;height:82%;transform:translateY(100%);border-radius:14px 14px 0 0}.panel.on{transform:translateY(0)}.chap h1{font-size:26px}.kor{font-size:18px}}
@@ -78,7 +83,7 @@ select.book{min-width:118px}select.chap{min-width:76px}
 <aside class="panel" id="panel"><div class="top"><button class="close" id="close">×</button><div class="heb" id="p-heb"></div><div class="translit" id="p-translit"></div><div><span class="strong" id="p-strong"></span></div></div>
 <div class="body"><div class="row"><div class="lab">뜻</div><div class="val big" id="p-gloss"></div></div>
 <div class="row"><div class="lab">품사 (문맥 형태)</div><div class="val" id="p-morph"></div></div>
-<div class="row"><div class="lab">상세 정의 (원문·영문)</div><div class="def" id="p-def"></div></div>
+<div class="row"><div class="lab" id="p-deflab">상세 정의 (영문)</div><div class="def" id="p-def"></div></div>
 <div class="row"><div class="lab">성경 내 용례</div><div id="p-occ"></div></div></div>
 <div class="foot" id="p-foot"></div></aside>
 <script>
@@ -176,8 +181,20 @@ function openWord(ch,v,i){const w=CUR.heb[String(ch)][v][i],L=LEX[w.s]||{};
   document.getElementById('p-strong').textContent=w.s;document.getElementById('p-gloss').textContent=L.ko||'번역 준비 중';
   document.getElementById('p-morph').textContent=w.m||'—';
   const def=document.getElementById('p-def');
-  if(L.ko)def.innerHTML=(L.d||L.ge||'')+' …';
-  else def.innerHTML=`<div class="pendbox"><b>한국어 뜻 준비 중</b> · 아래 영문 원뜻 참고<br><span style="color:#d4d9ec">${L.d||L.ge||''}…</span></div>`;
+  const en=(L.d||L.ge||'').trim();
+  /* 원본 렉시콘이 220자에서 잘려 저장돼 있어, 잘린 항목만 표시해 준다 */
+  const cut=en.length>=218?' <span class="cutmark">(원본 정의 일부)</span>':'';
+  const parts=[];
+  if(L.kd){
+    parts.push(`<div class="kodef">${esc(L.kd)}</div>`);
+    parts.push(`<button class="minibtn" data-act="en">영문 원문 ▾</button>`);
+    parts.push(`<div class="endef" id="p-en" style="display:none">${esc(en)}${cut}</div>`);
+  }else{
+    parts.push(`<div class="endef" style="margin-top:0">${esc(en)||'—'}${cut}</div>`);
+    if(en)parts.push(`<a class="minibtn" target="_blank" rel="noopener" href="https://translate.google.com/?sl=en&tl=ko&op=translate&text=${encodeURIComponent(en)}">Google 번역으로 보기 ↗</a>`);
+  }
+  def.innerHTML=parts.join('');
+  document.getElementById('p-deflab').textContent=L.kd?'상세 정의':'상세 정의 (영문)';
   document.getElementById('p-foot').innerHTML=(curTest==='nt'?'원문 SBLGNT · 태깅 STEPBible TAGNT (CC BY 4.0)<br>상세정의 Abbott-Smith':'원문 BHS/OSHB · 태깅 STEPBible (CC BY 4.0)<br>상세정의 Abridged BDB')+'<br>개역한글(PD) · KJV(PD)';
   renderOcc(w.s);
   panel.querySelector('.body').scrollTop=0;
@@ -235,6 +252,13 @@ async function gotoRef(bi,ch,v){
 }
 function close(){panel.classList.remove('on');scrim.classList.remove('on');}
 text.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)openWord(chapSel.value,c.dataset.v,+c.dataset.i);});
+document.getElementById('p-def').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act="en"]');if(!b)return;
+  const box=document.getElementById('p-en');if(!box)return;
+  const open=box.style.display!=='none';
+  box.style.display=open?'none':'block';
+  b.textContent=open?'영문 원문 ▾':'영문 원문 ▴';
+});
 document.getElementById('p-occ').addEventListener('click',e=>{
   const bc=e.target.closest('.bchip');if(bc){expandBook(+bc.dataset.bi);return;}
   const mo=e.target.closest('.occmore');if(mo){expandBook(+mo.dataset.bi,true);return;}

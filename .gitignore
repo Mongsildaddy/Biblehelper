@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 Thumbs.db
 miqra_repo-2.zip
+tools/_def_todo.jsonl
