@@ -5,7 +5,7 @@ compatibility_date = "2025-01-01"
 [vars]
 # 요약 요청을 허용할 도메인. 여러 개면 쉼표로 구분한다.
 # 로컬에서 시험할 때는 "http://localhost:8765" 를 함께 넣어 둔다.
-ALLOWED_ORIGINS = "https://mongsildaddy.github.io"
+ALLOWED_ORIGINS = "https://emmaustransbible.co.kr,https://www.emmaustransbible.co.kr,https://mongsildaddy.github.io"
 
 # 사용할 모델. 비워 두면 worker.js의 기본값을 쓴다.
 # MODEL = "claude-sonnet-4-5"
