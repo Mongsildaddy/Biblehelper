@@ -28,6 +28,9 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .chip{direction:rtl;background:transparent;border:0;cursor:pointer;padding:6px 8px 4px;border-radius:3px;text-align:center;min-width:40px;border-bottom:2px solid transparent;transition:background .15s,border-color .15s;font-family:inherit}
 .chip:hover,.chip:focus{background:#fff;border-bottom-color:var(--gold);outline:none}.chip.pend{opacity:.72}
 .chip .h{display:block;font-size:18px;line-height:1.35;color:var(--ink);font-family:"SBL Hebrew","Frank Ruhl Libre","Times New Roman",serif}
+/* 신약(헬라어)은 좌횡서라 방향과 정렬을 뒤집는다 */
+.heb-row.grk{direction:ltr;text-align:left}
+.heb-row.grk .chip{direction:ltr}
 .chip .t{display:block;font-size:10px;color:var(--muted);direction:ltr;font-family:Georgia,serif;font-style:italic;margin-top:1px}
 .chip .g{display:block;font-size:12px;color:var(--gold);margin-top:2px;font-weight:700}.chip.pend .g{color:var(--pending);font-weight:400}
 .loading{text-align:center;padding:60px 20px;color:var(--muted)}
@@ -38,6 +41,7 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .panel .top{padding:22px 24px 18px;border-bottom:1px solid #363b57;position:relative}
 .panel .close{position:absolute;top:16px;right:18px;background:0;border:0;color:#8b91ad;font-size:26px;cursor:pointer}
 .panel .heb{font-size:34px;color:var(--gold-lite);line-height:1.25;font-family:"SBL Hebrew","Frank Ruhl Libre",serif;direction:rtl}
+.panel .heb.grk{direction:ltr;font-family:"SBL Greek","Gentium Plus","Times New Roman",serif}
 .panel .translit{font-family:Georgia,serif;font-style:italic;color:#b7bdd6;font-size:16px;margin-top:4px}
 .panel .strong{display:inline-block;margin-top:10px;font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);background:var(--gold-lite);padding:2px 9px;border-radius:2px}
 .panel .body{padding:20px 24px;overflow-y:auto;flex:1}
@@ -188,7 +192,7 @@ function render(ch,hlV,hlS){
       const hit=(hlS&&w.s===hlS)?' hl':'';
       return `<button class="chip${pend?' pend':''}${hit}" data-v="${v}" data-i="${i}"><span class="h">${w.h}</span><span class="t">${L.t||''}</span><span class="g">${L.ko||'·'}</span></button>`;}).join('');
     const korLine=kor[v]!=null?`<span class="kor">${kor[v]}</span>`:`<span class="kor na">개역한글 준비 중 (소스 보완 필요)</span>`;
-    text.insertAdjacentHTML('beforeend',`<div class="verse" id="v-${v}"><span class="vnum">${v}</span>${korLine}<div class="kjv">${kjv[v]||''}</div>${words.length?`<div class="heb-row">${chips}</div>`:''}</div>`);
+    text.insertAdjacentHTML('beforeend',`<div class="verse" id="v-${v}"><span class="vnum">${v}</span>${korLine}<div class="kjv">${kjv[v]||''}</div>${words.length?`<div class="heb-row${curTest==='nt'?' grk':''}">${chips}</div>`:''}</div>`);
   });
   if(hlV!=null)spotlight(hlV);
 }
@@ -200,7 +204,11 @@ function spotlight(v){
 }
 const panel=document.getElementById('panel'),scrim=document.getElementById('scrim');
 function openWord(ch,v,i){const w=CUR.heb[String(ch)][v][i],L=LEX[w.s]||{};
-  document.getElementById('p-heb').textContent=w.h;document.getElementById('p-translit').textContent=L.t||'';
+  const pheb=document.getElementById('p-heb');
+  pheb.textContent=w.h;
+  /* 헬라어(G####)면 좌횡서로 */
+  pheb.classList.toggle('grk',w.s.charAt(0)==='G');
+  document.getElementById('p-translit').textContent=L.t||'';
   document.getElementById('p-strong').textContent=w.s;document.getElementById('p-gloss').textContent=L.ko||'번역 준비 중';
   document.getElementById('p-morph').textContent=w.m||'—';
   const def=document.getElementById('p-def');
