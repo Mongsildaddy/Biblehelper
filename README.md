@@ -5,8 +5,8 @@
 원어 낱말을 누르면 스트롱번호·품사·뜻과 함께 **성경 전체의 용례**, 그리고
 그 낱말이 해당 책 안에서 어떤 의미로 쓰였는지 정리한 **AI 요약**을 볼 수 있습니다.
 
-- 서비스 주소(예정): https://emmaustransbible.co.kr
-- 현재 주소: https://mongsildaddy.github.io/Biblehelper/
+**https://emmaustransbible.co.kr**
+(기존 `mongsildaddy.github.io/Biblehelper` 주소는 이쪽으로 넘어옵니다.)
 
 ## 쓰는 법
 1. 위쪽에서 **구약 / 신약** 탭을 고르고, 책과 장을 선택합니다.
