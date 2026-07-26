@@ -5,3 +5,9 @@ __pycache__/
 Thumbs.db
 miqra_repo-2.zip
 tools/_def_todo.jsonl
+tools/_sum_todo.jsonl
+tools/_sum_todo.txt
+tools/_cand.txt
+tools/_cand2.txt
+tools/_koempty.txt
+.claude/

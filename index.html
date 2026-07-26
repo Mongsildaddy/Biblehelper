@@ -60,6 +60,15 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .occmore{width:100%;background:#232842;border:1px dashed #454b6b;color:#8b91ad;padding:7px;font-family:inherit;font-size:12px;cursor:pointer;margin-top:8px;border-radius:3px}
 .occmore:hover{color:var(--gold-lite);border-color:var(--gold-lite)}
 .occload{font-size:13px;color:#8b91ad;padding:8px 0}
+.aibox{margin-top:14px;background:#232842;border:1px solid #3b4166;border-left:3px solid var(--gold);border-radius:4px;padding:13px 15px}
+.aihd{font-size:12px;color:var(--gold-lite);font-weight:700;margin-bottom:8px;line-height:1.5}
+.aihd .tag{display:inline-block;font-size:10px;font-weight:400;color:#8b91ad;border:1px solid #454b6b;border-radius:2px;padding:1px 5px;margin-left:6px;vertical-align:1px}
+.aitxt{font-size:13.5px;line-height:1.8;color:#e4e8f7;white-space:pre-wrap}
+.aifoot{margin-top:11px;padding-top:9px;border-top:1px solid #363b57;font-size:11px;color:#7d8399;line-height:1.5}
+.aigen{margin-top:10px;background:#2a3050;border:1px solid #454b6b;color:#c3c9e0;font-family:inherit;font-size:12.5px;padding:7px 12px;border-radius:3px;cursor:pointer}
+.aigen:hover:not([disabled]){border-color:var(--gold-lite);color:var(--gold-lite)}
+.aigen[disabled]{opacity:.55;cursor:default}
+.aierr{font-size:12px;color:var(--pending);margin-top:8px;line-height:1.5}
 .kodef{font-size:14px;line-height:1.75;color:#e4e8f7}
 .endef{font-size:13px;line-height:1.6;color:#aeb5cf;font-family:Georgia,serif;margin-top:8px}
 .cutmark{color:var(--pending);font-size:11px;font-style:italic;white-space:nowrap}
@@ -92,6 +101,19 @@ const bookSel=document.getElementById('book'),chapSel=document.getElementById('c
 /* 용례(콘코던스) 상태 */
 const IDX={},BOOKCACHE=new Map(),MAXCACHE=4;
 let OCC=null,occToken=0;
+/* ── AI 요약 설정 ──────────────────────────────
+   SUMAPI: 실시간 요약 서버(Cloudflare Worker) 주소.
+   비워 두면 books/_sum.json에 내장된 요약만 표시하고, 생성 버튼은 숨겨진다.
+   server/README.md 의 배포 절차를 마친 뒤 발급받은 주소를 여기에 넣으면 켜진다.
+   커밋하기 전에 시험해 보려면 개발자 도구 콘솔에서 아래처럼 덮어쓸 수 있다.
+     localStorage.setItem('miqra.sumapi','https://…workers.dev'); location.reload(); */
+let SUMAPI='';
+try{SUMAPI=localStorage.getItem('miqra.sumapi')||SUMAPI;}catch(e){}
+const SUM_DISC='요약한 내용은 AI의 결과로 정리된 것입니다. 성경 연구의 참고 자료로만 활용해 주세요.';
+let SUM={};
+const sumKey=(s,bi)=>s+'|'+bi;
+function sumCacheGet(k){try{return localStorage.getItem('miqra.sum.'+k);}catch(e){return null;}}
+function sumCacheSet(k,v){try{localStorage.setItem('miqra.sum.'+k,v);}catch(e){}}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function getBook(bi){
   if(BOOKCACHE.has(bi)){const b=BOOKCACHE.get(bi);BOOKCACHE.delete(bi);BOOKCACHE.set(bi,b);return b;}
@@ -133,6 +155,7 @@ async function boot(){
   try{
     MANI=await (await fetch('books/_manifest.json')).json();
     LEX=await (await fetch('books/_lex.json')).json();
+    try{SUM=await (await fetch('books/_sum.json')).json();}catch(e){SUM={};}
     fillBooks();
     document.getElementById('tab-ot').onclick=()=>switchTest('ot');
     document.getElementById('tab-nt').onclick=()=>switchTest('nt');
@@ -214,6 +237,7 @@ async function renderOcc(s){
   OCC={s:s,map:new Map(groups)};
   box.innerHTML=`<div class="occsum">총 <b>${e.n.toLocaleString()}</b>회 · <b>${nv.toLocaleString()}</b>개 구절 · <b>${groups.length}</b>권</div>`
     +`<div class="bchips">${sorted.map(g=>`<button class="bchip" data-bi="${g[0]}">${esc(MANI[g[0]].name)}<b>${g[1].length}</b></button>`).join('')}</div>`
+    +`<div id="p-sum"></div>`
     +`<div class="occlist" id="p-occlist"></div>`;
   expandBook(OCC.map.has(curBi)?curBi:sorted[0][0]);
 }
@@ -221,6 +245,7 @@ async function expandBook(bi,showAll){
   if(!OCC)return;
   const my=occToken,LIMIT=40;
   document.querySelectorAll('#p-occ .bchip').forEach(c=>c.classList.toggle('on',+c.dataset.bi===bi));
+  renderSum(bi);
   const list=document.getElementById('p-occlist');
   list.innerHTML='<div class="occload">본문 불러오는 중…</div>';
   const refs=OCC.map.get(bi)||[];
@@ -235,6 +260,62 @@ async function expandBook(bi,showAll){
   }).join('');
   list.innerHTML=`<div class="occsum" style="margin:12px 0 4px">${esc(MANI[bi].name)} · ${refs.length}개 구절</div>`+rows
     +(show.length<refs.length?`<button class="occmore" data-bi="${bi}">나머지 ${refs.length-show.length}개 더 보기</button>`:'');
+}
+/* ── AI 요약 박스 ───────────────────────────── */
+function sumLabel(s){
+  const L=LEX[s]||{},w=document.getElementById('p-heb').textContent.trim();
+  return `‘${L.ko||s}’${w?`(${w})`:''}`;
+}
+function sumBox(title,body,tag,btnBi,btnLabel){
+  return `<div class="aibox">`
+    +`<div class="aihd">${esc(title)}${tag?`<span class="tag">${esc(tag)}</span>`:''}</div>`
+    +(body?`<div class="aitxt">${esc(body)}</div>`:'')
+    +(btnBi!=null?`<button class="aigen" data-bi="${btnBi}">${esc(btnLabel)}</button>`:'')
+    +`<div class="aifoot">${SUM_DISC}</div></div>`;
+}
+function renderSum(bi){
+  const host=document.getElementById('p-sum');
+  if(!host||!OCC)return;
+  OCC.bi=bi;
+  const s=OCC.s,k=sumKey(s,bi),bn=MANI[bi].name,lab=sumLabel(s);
+  const book=SUM[k]||sumCacheGet(k);
+  if(book){host.innerHTML=sumBox(`${bn}에서 사용된 ${lab}의 의미`,book,SUM[k]?'내장 요약':'생성된 요약');return;}
+  const whole=SUM[s]||null;
+  if(!whole&&!SUMAPI){host.innerHTML='';return;}
+  host.innerHTML=sumBox(
+    whole?`성경 전체에서 사용된 ${lab}의 의미`:`${bn}에서 사용된 ${lab}의 의미`,
+    whole,whole?'내장 요약':null,
+    SUMAPI?bi:null,
+    whole?`${bn}에서의 의미로 좁혀서 요약하기`:'AI 요약 생성하기');
+}
+async function genSum(bi){
+  const host=document.getElementById('p-sum'),btn=host&&host.querySelector('.aigen');
+  if(!OCC||!btn||!SUMAPI)return;
+  const s=OCC.s,my=occToken,k=sumKey(s,bi);
+  btn.disabled=true;btn.textContent='요약을 만드는 중…';
+  const old=host.querySelector('.aierr');if(old)old.remove();
+  try{
+    const b=await getBook(bi);
+    const verses=(OCC.map.get(bi)||[]).slice(0,60).map(([ch,v])=>
+      ({ref:ch+':'+v,text:(((b.kor||{})[ch]||{})[v])||(((b.kjv||{})[ch]||{})[v])||''}));
+    const L=LEX[s]||{};
+    const r=await fetch(SUMAPI,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      strong:s,lemma:document.getElementById('p-heb').textContent,translit:L.t||'',
+      gloss:L.ko||'',definition:L.kd||L.d||L.ge||'',
+      book:MANI[bi].name,total:(OCC.map.get(bi)||[]).length,verses})});
+    if(!r.ok)throw new Error('서버 응답 '+r.status);
+    const j=await r.json();
+    if(!j.summary)throw new Error(j.error||'빈 응답');
+    sumCacheSet(k,j.summary);
+    if(my===occToken&&OCC&&OCC.s===s&&OCC.bi===bi)renderSum(bi);
+  }catch(e){
+    if(my!==occToken)return;
+    btn.disabled=false;btn.textContent='다시 시도';
+    const er=document.createElement('div');er.className='aierr';
+    er.textContent='요약을 만들지 못했습니다 · '+e.message;
+    const box=host.querySelector('.aibox'),foot=host.querySelector('.aifoot');
+    if(box&&foot)box.insertBefore(er,foot);
+  }
 }
 async function gotoRef(bi,ch,v){
   const s=OCC?OCC.s:null;
@@ -260,6 +341,7 @@ document.getElementById('p-def').addEventListener('click',e=>{
   b.textContent=open?'영문 원문 ▾':'영문 원문 ▴';
 });
 document.getElementById('p-occ').addEventListener('click',e=>{
+  const ag=e.target.closest('.aigen');if(ag){genSum(+ag.dataset.bi);return;}
   const bc=e.target.closest('.bchip');if(bc){expandBook(+bc.dataset.bi);return;}
   const mo=e.target.closest('.occmore');if(mo){expandBook(+mo.dataset.bi,true);return;}
   const it=e.target.closest('.occitem');if(it){gotoRef(+it.dataset.bi,it.dataset.ch,it.dataset.v);}
