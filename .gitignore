@@ -11,3 +11,5 @@ tools/_cand.txt
 tools/_cand2.txt
 tools/_koempty.txt
 .claude/
+tools/pdlex/
+tools/_kd_todo.json

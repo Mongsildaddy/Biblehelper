@@ -60,8 +60,11 @@ python3 -m http.server 8000   # 그 뒤 http://localhost:8000
 ## 데이터 출처 및 라이선스
 - 히브리어 원문·태깅: **OpenScriptures OSHB** / **STEPBible TAHOT** (CC BY 4.0)
 - 헬라어 원문·태깅: **STEPBible TAGNT** (SBLGNT 기반, CC BY 4.0)
-- 헬라어 렉시콘: **TBESG** (Abbott-Smith 기반)
-- 상세 정의(영문): Abridged BDB (Online Bible) — *참고용, 상업 배포 시 Online Bible 허가 권장*
+- 헬라어 상세 정의: **Abbott-Smith, A Manual Greek Lexicon of the NT** (1922, PD)
+  — STEPBible **TBESG** 를 통해 수록 (CC BY 4.0)
+- 히브리어 상세 정의: **Brown-Driver-Briggs** (1906, PD) + **Strong's Hebrew Dictionary** (1890, PD)
+  — [openscriptures/HebrewLexicon](https://github.com/openscriptures/HebrewLexicon) (CC BY 4.0)
+  을 통해 수록. 출처 표기: Open Scriptures Hebrew Bible Project
 - 개역한글: 2012년 저작권 만료 (공개)
 - KJV: 퍼블릭도메인
 - 한국어 gloss: 본 프로젝트가 PD 렉시콘을 기반으로 번역 (배치1~5, 감수 전)
@@ -87,7 +90,18 @@ python3 -m http.server 8000   # 그 뒤 http://localhost:8000
 3. 역대하 21~36장 · 욥기 42장 · 베드로전서 5장 개역한글 결손 보완
 4. AI 요약 조합 확대 (현재 244개) 및 신학 감수
 5. 한국어 gloss 신학 감수
-6. 도메인 연결(emmaustransbible.co.kr) 및 AdSense
-   - 선행 과제: **Abridged BDB (Online Bible) 재배포 라이선스 확인.**
-     광고를 붙이면 상업적 이용으로 볼 여지가 있어, 허가를 받거나
-     해당 정의를 PD 소스로 교체한 뒤 진행해야 안전합니다.
+6. AdSense 연동 (라이선스 정리 완료 — 아래 참고)
+
+## 라이선스 정리 기록
+초기 데이터의 히브리어 상세 정의는 Online Bible이 배포한 **Abridged BDB** 였다.
+광고를 붙일 경우 상업적 이용으로 볼 여지가 있는데 이 판본의 재배포 조건이
+불분명해, 아래와 같이 정리했다.
+
+- 히브리어 정의를 **BDB 1906 원문 + Strong's 1890** 으로 전량 교체 (9,194개 100%)
+  → 두 저작 모두 퍼블릭도메인, 수록 경로인 openscriptures/HebrewLexicon 은 CC BY 4.0
+- 옛 정의를 번역했던 한국어 상세정의 361개는 파생물이므로 폐기 후 새 원문 기준 재작성
+- **STEPBible TBESH 는 쓰지 않는다.** CC BY 표기와 별개로 파일 헤더에
+  "Abridged BDB by Online Bible 기반이므로 적용 전 Online Bible의 허가를 받으라"는
+  단서가 붙어 있다.
+- 헬라어(TBESG/Abbott-Smith)는 해당 단서가 없고 1922년 간행·저자 1947년 사망으로
+  문제 없음 → 그대로 유지
