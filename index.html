@@ -27,17 +27,17 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .heb-row{direction:rtl;text-align:right;display:flex;flex-wrap:wrap;gap:5px;margin-left:26px;padding:12px 14px;background:var(--vellum2);border-radius:4px;border:1px solid var(--line)}
 .chip{direction:rtl;background:transparent;border:0;cursor:pointer;padding:6px 8px 4px;border-radius:3px;text-align:center;min-width:40px;border-bottom:2px solid transparent;transition:background .15s,border-color .15s;font-family:inherit}
 .chip:hover,.chip:focus{background:#fff;border-bottom-color:var(--gold);outline:none}.chip.pend{opacity:.72}
-.chip .h{display:block;font-size:23px;line-height:1.3;color:var(--ink);font-family:"SBL Hebrew","Frank Ruhl Libre","Times New Roman",serif}
+.chip .h{display:block;font-size:18px;line-height:1.35;color:var(--ink);font-family:"SBL Hebrew","Frank Ruhl Libre","Times New Roman",serif}
 .chip .t{display:block;font-size:10px;color:var(--muted);direction:ltr;font-family:Georgia,serif;font-style:italic;margin-top:1px}
 .chip .g{display:block;font-size:12px;color:var(--gold);margin-top:2px;font-weight:700}.chip.pend .g{color:var(--pending);font-weight:400}
 .loading{text-align:center;padding:60px 20px;color:var(--muted)}
 .loading .big{font-size:40px;color:var(--gold-lite);font-family:"SBL Hebrew",serif;margin-bottom:12px;animation:pulse 1.4s infinite}
 @keyframes pulse{50%{opacity:.4}}
 .scrim{position:fixed;inset:0;background:rgba(20,20,30,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:30}.scrim.on{opacity:1;pointer-events:auto}
-.panel{position:fixed;top:0;right:0;height:100%;width:380px;max-width:90vw;background:var(--card);color:var(--card-ink);z-index:40;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-12px 0 40px rgba(0,0,0,.3);display:flex;flex-direction:column}.panel.on{transform:translateX(0)}
+.panel{position:fixed;top:0;right:0;height:100%;width:430px;max-width:92vw;background:var(--card);color:var(--card-ink);z-index:40;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-12px 0 40px rgba(0,0,0,.3);display:flex;flex-direction:column}.panel.on{transform:translateX(0)}
 .panel .top{padding:22px 24px 18px;border-bottom:1px solid #363b57;position:relative}
 .panel .close{position:absolute;top:16px;right:18px;background:0;border:0;color:#8b91ad;font-size:26px;cursor:pointer}
-.panel .heb{font-size:48px;color:var(--gold-lite);line-height:1.2;font-family:"SBL Hebrew","Frank Ruhl Libre",serif;direction:rtl}
+.panel .heb{font-size:34px;color:var(--gold-lite);line-height:1.25;font-family:"SBL Hebrew","Frank Ruhl Libre",serif;direction:rtl}
 .panel .translit{font-family:Georgia,serif;font-style:italic;color:#b7bdd6;font-size:16px;margin-top:4px}
 .panel .strong{display:inline-block;margin-top:10px;font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);background:var(--gold-lite);padding:2px 9px;border-radius:2px}
 .panel .body{padding:20px 24px;overflow-y:auto;flex:1}
@@ -46,6 +46,22 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .pendbox{font-size:14px;color:#c3c9e0;padding:12px 14px;background:#232842;border-radius:4px;border-left:3px solid var(--gold)}.pendbox b{color:var(--gold-lite)}
 .panel .foot{padding:14px 24px;border-top:1px solid #363b57;font-size:11px;color:#6f7590;line-height:1.5}
 .hint{text-align:center;color:var(--muted);font-size:13px;padding:18px 0 0}
+.occsum{font-size:13px;color:#b7bdd6;margin-bottom:10px}.occsum b{color:var(--gold-lite)}
+.bchips{display:flex;flex-wrap:wrap;gap:6px}
+.bchip{background:#232842;color:#c3c9e0;border:1px solid #363b57;border-radius:3px;padding:5px 9px;font-size:12px;font-family:inherit;cursor:pointer}
+.bchip:hover{border-color:var(--gold-lite);color:#fff}
+.bchip.on{background:var(--gold-lite);color:var(--ink);border-color:var(--gold-lite);font-weight:700}
+.bchip b{color:var(--gold-lite);margin-left:5px}.bchip.on b{color:var(--ink)}
+.occlist{margin-top:12px;border-top:1px solid #363b57}
+.occitem{display:block;width:100%;text-align:left;background:0;border:0;border-bottom:1px solid #2b3049;color:#d4d9ec;padding:9px 2px;font-family:inherit;font-size:13px;cursor:pointer;line-height:1.5}
+.occitem:hover{background:#232842}
+.occitem .ref{color:var(--gold-lite);font-family:ui-monospace,monospace;font-size:12px;font-weight:700;margin-right:8px}
+.occitem .txt{color:#aeb5cf}.occitem.cur{background:#2a3050}.occitem.cur .ref{color:#fff}
+.occmore{width:100%;background:#232842;border:1px dashed #454b6b;color:#8b91ad;padding:7px;font-family:inherit;font-size:12px;cursor:pointer;margin-top:8px;border-radius:3px}
+.occmore:hover{color:var(--gold-lite);border-color:var(--gold-lite)}
+.occload{font-size:13px;color:#8b91ad;padding:8px 0}
+.verse.hl{background:#fff6d8;box-shadow:0 0 0 8px #fff6d8;border-radius:2px;transition:background 1s,box-shadow 1s}
+.chip.hl{background:#ffeaa0;border-bottom-color:var(--gold)}
 @media(max-width:560px){.panel{width:100%;max-width:100%;top:auto;bottom:0;height:82%;transform:translateY(100%);border-radius:14px 14px 0 0}.panel.on{transform:translateY(0)}.chap h1{font-size:26px}.kor{font-size:18px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
@@ -56,17 +72,47 @@ select.book{min-width:118px}select.chap{min-width:76px}
 <div class="wrap">
 <div class="chap"><div class="bk" id="c-bk"></div><h1 id="c-title"></h1><div class="sub" id="c-sub"></div><div class="cov" id="c-cov"></div></div>
 <div id="text"><div class="loading"><div class="big">מִקְרָא</div>불러오는 중…</div></div>
-<div class="hint">↑ 히브리어 단어를 누르면 원어 뜻이 열립니다 · 흐린 단어는 <b>번역 준비 중</b>(영문 정의 제공)</div>
+<div class="hint">↑ 원어 단어를 누르면 뜻 · 품사와 함께 <b>그 단어가 쓰인 성경의 모든 구절</b>이 열립니다 (구절을 누르면 이동)</div>
 </div>
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel"><div class="top"><button class="close" id="close">×</button><div class="heb" id="p-heb"></div><div class="translit" id="p-translit"></div><div><span class="strong" id="p-strong"></span></div></div>
 <div class="body"><div class="row"><div class="lab">뜻</div><div class="val big" id="p-gloss"></div></div>
 <div class="row"><div class="lab">품사 (문맥 형태)</div><div class="val" id="p-morph"></div></div>
-<div class="row"><div class="lab">상세 정의 (원문·영문)</div><div class="def" id="p-def"></div></div></div>
+<div class="row"><div class="lab">상세 정의 (원문·영문)</div><div class="def" id="p-def"></div></div>
+<div class="row"><div class="lab">성경 내 용례</div><div id="p-occ"></div></div></div>
 <div class="foot" id="p-foot"></div></aside>
 <script>
 let LEX={}, MANI=[], CUR=null, curBi=0, curTest='ot';
 const bookSel=document.getElementById('book'),chapSel=document.getElementById('chap'),text=document.getElementById('text');
+/* 용례(콘코던스) 상태 */
+const IDX={},BOOKCACHE=new Map(),MAXCACHE=4;
+let OCC=null,occToken=0;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function getBook(bi){
+  if(BOOKCACHE.has(bi)){const b=BOOKCACHE.get(bi);BOOKCACHE.delete(bi);BOOKCACHE.set(bi,b);return b;}
+  const b=await (await fetch('books/'+MANI[bi].osis+'.json')).json();
+  BOOKCACHE.set(bi,b);
+  while(BOOKCACHE.size>MAXCACHE){
+    let victim=null;
+    for(const k of BOOKCACHE.keys()){if(k!==curBi&&k!==bi){victim=k;break;}}
+    if(victim===null)break;
+    BOOKCACHE.delete(victim);
+  }
+  return b;
+}
+async function getIdx(s){
+  const shard=s.slice(0,3);
+  if(!(shard in IDX)){
+    try{IDX[shard]=await (await fetch('books/idx/'+shard+'.json')).json();}
+    catch(e){IDX[shard]={};}
+  }
+  return IDX[shard][s]||null;
+}
+/* "0:1.1,1.26|2:3.4" -> [[책인덱스,[[장,절],...]],...] */
+function parseRefs(r){
+  return r.split('|').map(p=>{const k=p.indexOf(':');
+    return [+p.slice(0,k),p.slice(k+1).split(',').map(x=>x.split('.'))];});
+}
 function fillBooks(){
   bookSel.innerHTML='';
   MANI.forEach((b,i)=>{if((b.t||'ot')!==curTest)return;const o=document.createElement('option');o.value=i;o.textContent=b.name;bookSel.appendChild(o);});
@@ -88,14 +134,16 @@ async function boot(){
     await loadBook(+bookSel.value);
   }catch(e){text.innerHTML='<div class="loading">데이터를 불러오지 못했습니다. 서버(정적 호스팅)에서 실행해야 합니다.<br><span style="font-size:12px">'+e+'</span></div>';}
 }
-async function loadBook(bi){
+async function loadBook(bi,ch,hlV,hlS){
   curBi=bi;const m=MANI[bi];
   text.innerHTML='<div class="loading"><div class="big">מִקְרָא</div>'+m.name+' 불러오는 중…</div>';
-  CUR=await (await fetch('books/'+m.osis+'.json')).json();
+  CUR=await getBook(bi);
   chapSel.innerHTML='';for(let c=1;c<=CUR.chapters;c++){const o=document.createElement('option');o.value=c;o.textContent=c+'장';chapSel.appendChild(o);}
-  render(1);
+  const target=Math.min(Math.max(+(ch||1),1),CUR.chapters);
+  chapSel.value=target;
+  render(target,hlV,hlS);
 }
-function render(ch){
+function render(ch,hlV,hlS){
   const m=MANI[curBi],C=String(ch);
   document.getElementById('c-bk').textContent=CUR.osis.toUpperCase();
   document.getElementById('c-title').textContent=m.name+' '+ch+'장';
@@ -109,10 +157,18 @@ function render(ch){
   verses.forEach(v=>{
     const words=heb[v]||[];
     const chips=words.map((w,i)=>{const L=LEX[w.s]||{};const pend=!L.ko;
-      return `<button class="chip${pend?' pend':''}" data-v="${v}" data-i="${i}"><span class="h">${w.h}</span><span class="t">${L.t||''}</span><span class="g">${L.ko||'·'}</span></button>`;}).join('');
+      const hit=(hlS&&w.s===hlS)?' hl':'';
+      return `<button class="chip${pend?' pend':''}${hit}" data-v="${v}" data-i="${i}"><span class="h">${w.h}</span><span class="t">${L.t||''}</span><span class="g">${L.ko||'·'}</span></button>`;}).join('');
     const korLine=kor[v]!=null?`<span class="kor">${kor[v]}</span>`:`<span class="kor na">개역한글 준비 중 (소스 보완 필요)</span>`;
-    text.insertAdjacentHTML('beforeend',`<div class="verse"><span class="vnum">${v}</span>${korLine}<div class="kjv">${kjv[v]||''}</div>${words.length?`<div class="heb-row">${chips}</div>`:''}</div>`);
+    text.insertAdjacentHTML('beforeend',`<div class="verse" id="v-${v}"><span class="vnum">${v}</span>${korLine}<div class="kjv">${kjv[v]||''}</div>${words.length?`<div class="heb-row">${chips}</div>`:''}</div>`);
   });
+  if(hlV!=null)spotlight(hlV);
+}
+function spotlight(v){
+  const el=document.getElementById('v-'+v);if(!el)return;
+  el.classList.add('hl');
+  window.scrollTo({top:el.getBoundingClientRect().top+window.pageYOffset-110,behavior:'smooth'});
+  setTimeout(()=>el.classList.remove('hl'),2800);
 }
 const panel=document.getElementById('panel'),scrim=document.getElementById('scrim');
 function openWord(ch,v,i){const w=CUR.heb[String(ch)][v][i],L=LEX[w.s]||{};
@@ -123,9 +179,67 @@ function openWord(ch,v,i){const w=CUR.heb[String(ch)][v][i],L=LEX[w.s]||{};
   if(L.ko)def.innerHTML=(L.d||L.ge||'')+' …';
   else def.innerHTML=`<div class="pendbox"><b>한국어 뜻 준비 중</b> · 아래 영문 원뜻 참고<br><span style="color:#d4d9ec">${L.d||L.ge||''}…</span></div>`;
   document.getElementById('p-foot').innerHTML=(curTest==='nt'?'원문 SBLGNT · 태깅 STEPBible TAGNT (CC BY 4.0)<br>상세정의 Abbott-Smith':'원문 BHS/OSHB · 태깅 STEPBible (CC BY 4.0)<br>상세정의 Abridged BDB')+'<br>개역한글(PD) · KJV(PD)';
+  renderOcc(w.s);
+  panel.querySelector('.body').scrollTop=0;
   panel.classList.add('on');scrim.classList.add('on');}
+/* ── 성경 내 용례 ───────────────────────────── */
+async function renderOcc(s){
+  const box=document.getElementById('p-occ');
+  const my=++occToken;OCC=null;
+  if(!s){box.innerHTML='<div class="occload">스트롱번호가 없어 용례를 찾을 수 없습니다.</div>';return;}
+  box.innerHTML='<div class="occload">용례 찾는 중…</div>';
+  const e=await getIdx(s);
+  if(my!==occToken)return;
+  if(!e){box.innerHTML='<div class="occload">색인에서 찾지 못했습니다.</div>';return;}
+  const groups=parseRefs(e.r);
+  const nv=groups.reduce((a,g)=>a+g[1].length,0);
+  const sorted=[...groups].sort((a,b)=>b[1].length-a[1].length);
+  OCC={s:s,map:new Map(groups)};
+  box.innerHTML=`<div class="occsum">총 <b>${e.n.toLocaleString()}</b>회 · <b>${nv.toLocaleString()}</b>개 구절 · <b>${groups.length}</b>권</div>`
+    +`<div class="bchips">${sorted.map(g=>`<button class="bchip" data-bi="${g[0]}">${esc(MANI[g[0]].name)}<b>${g[1].length}</b></button>`).join('')}</div>`
+    +`<div class="occlist" id="p-occlist"></div>`;
+  expandBook(OCC.map.has(curBi)?curBi:sorted[0][0]);
+}
+async function expandBook(bi,showAll){
+  if(!OCC)return;
+  const my=occToken,LIMIT=40;
+  document.querySelectorAll('#p-occ .bchip').forEach(c=>c.classList.toggle('on',+c.dataset.bi===bi));
+  const list=document.getElementById('p-occlist');
+  list.innerHTML='<div class="occload">본문 불러오는 중…</div>';
+  const refs=OCC.map.get(bi)||[];
+  const b=await getBook(bi);
+  if(my!==occToken)return;
+  const show=showAll?refs:refs.slice(0,LIMIT);
+  const rows=show.map(([ch,v])=>{
+    const raw=((b.kor||{})[ch]||{})[v]||((b.kjv||{})[ch]||{})[v]||'';
+    const t=raw.length>78?raw.slice(0,78)+'…':raw;
+    const cur=(bi===curBi&&String(ch)===String(chapSel.value))?' cur':'';
+    return `<button class="occitem${cur}" data-bi="${bi}" data-ch="${ch}" data-v="${v}"><span class="ref">${ch}:${v}</span><span class="txt">${esc(t)}</span></button>`;
+  }).join('');
+  list.innerHTML=`<div class="occsum" style="margin:12px 0 4px">${esc(MANI[bi].name)} · ${refs.length}개 구절</div>`+rows
+    +(show.length<refs.length?`<button class="occmore" data-bi="${bi}">나머지 ${refs.length-show.length}개 더 보기</button>`:'');
+}
+async function gotoRef(bi,ch,v){
+  const s=OCC?OCC.s:null;
+  close();
+  const t=MANI[bi].t||'ot';
+  if(t!==curTest){
+    curTest=t;
+    document.getElementById('tab-ot').classList.toggle('on',t==='ot');
+    document.getElementById('tab-nt').classList.toggle('on',t==='nt');
+    fillBooks();
+  }
+  bookSel.value=bi;
+  if(bi!==curBi){await loadBook(bi,ch,v,s);}
+  else{chapSel.value=ch;render(+ch,v,s);}
+}
 function close(){panel.classList.remove('on');scrim.classList.remove('on');}
 text.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)openWord(chapSel.value,c.dataset.v,+c.dataset.i);});
+document.getElementById('p-occ').addEventListener('click',e=>{
+  const bc=e.target.closest('.bchip');if(bc){expandBook(+bc.dataset.bi);return;}
+  const mo=e.target.closest('.occmore');if(mo){expandBook(+mo.dataset.bi,true);return;}
+  const it=e.target.closest('.occitem');if(it){gotoRef(+it.dataset.bi,it.dataset.ch,it.dataset.v);}
+});
 document.getElementById('close').onclick=close;scrim.onclick=close;document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 bookSel.addEventListener('change',e=>loadBook(+e.target.value));
 chapSel.addEventListener('change',e=>render(+e.target.value));
