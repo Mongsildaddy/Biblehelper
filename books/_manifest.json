@@ -1,0 +1,551 @@
+[
+ {
+  "osis": "Gen",
+  "name": "창세기",
+  "chapters": 50,
+  "cov": 90,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Exod",
+  "name": "출애굽기",
+  "chapters": 40,
+  "cov": 91,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Lev",
+  "name": "레위기",
+  "chapters": 27,
+  "cov": 91,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Num",
+  "name": "민수기",
+  "chapters": 36,
+  "cov": 91,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Deut",
+  "name": "신명기",
+  "chapters": 34,
+  "cov": 91,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Josh",
+  "name": "여호수아",
+  "chapters": 24,
+  "cov": 87,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Judg",
+  "name": "사사기",
+  "chapters": 21,
+  "cov": 86,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Ruth",
+  "name": "룻기",
+  "chapters": 4,
+  "cov": 83,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "1Sam",
+  "name": "사무엘상",
+  "chapters": 31,
+  "cov": 89,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "2Sam",
+  "name": "사무엘하",
+  "chapters": 24,
+  "cov": 87,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "1Kgs",
+  "name": "열왕기상",
+  "chapters": 22,
+  "cov": 89,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "2Kgs",
+  "name": "열왕기하",
+  "chapters": 25,
+  "cov": 89,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "1Chr",
+  "name": "역대상",
+  "chapters": 29,
+  "cov": 76,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "2Chr",
+  "name": "역대하",
+  "chapters": 36,
+  "cov": 89,
+  "kor_missing": [
+   "21",
+   "22",
+   "23",
+   "24",
+   "25",
+   "26",
+   "27",
+   "28",
+   "29",
+   "30",
+   "31",
+   "32",
+   "33",
+   "34",
+   "35",
+   "36"
+  ],
+  "t": "ot"
+ },
+ {
+  "osis": "Ezra",
+  "name": "에스라",
+  "chapters": 10,
+  "cov": 80,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Neh",
+  "name": "느헤미야",
+  "chapters": 13,
+  "cov": 79,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Esth",
+  "name": "에스더",
+  "chapters": 10,
+  "cov": 84,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Job",
+  "name": "욥기",
+  "chapters": 42,
+  "cov": 76,
+  "kor_missing": [
+   "42"
+  ],
+  "t": "ot"
+ },
+ {
+  "osis": "Ps",
+  "name": "시편",
+  "chapters": 150,
+  "cov": 82,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Prov",
+  "name": "잠언",
+  "chapters": 31,
+  "cov": 75,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Eccl",
+  "name": "전도서",
+  "chapters": 12,
+  "cov": 86,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Song",
+  "name": "아가",
+  "chapters": 8,
+  "cov": 67,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Isa",
+  "name": "이사야",
+  "chapters": 66,
+  "cov": 79,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Jer",
+  "name": "예레미야",
+  "chapters": 52,
+  "cov": 88,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Lam",
+  "name": "예레미야애가",
+  "chapters": 5,
+  "cov": 79,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Ezek",
+  "name": "에스겔",
+  "chapters": 48,
+  "cov": 87,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Dan",
+  "name": "다니엘",
+  "chapters": 12,
+  "cov": 86,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Hos",
+  "name": "호세아",
+  "chapters": 14,
+  "cov": 82,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Joel",
+  "name": "요엘",
+  "chapters": 3,
+  "cov": 80,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Amos",
+  "name": "아모스",
+  "chapters": 9,
+  "cov": 84,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Obad",
+  "name": "오바댜",
+  "chapters": 1,
+  "cov": 83,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Jonah",
+  "name": "요나",
+  "chapters": 4,
+  "cov": 83,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Mic",
+  "name": "미가",
+  "chapters": 7,
+  "cov": 82,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Nah",
+  "name": "나훔",
+  "chapters": 3,
+  "cov": 69,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Hab",
+  "name": "하박국",
+  "chapters": 3,
+  "cov": 75,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Zeph",
+  "name": "스바냐",
+  "chapters": 3,
+  "cov": 82,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Hag",
+  "name": "학개",
+  "chapters": 2,
+  "cov": 89,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Zech",
+  "name": "스가랴",
+  "chapters": 14,
+  "cov": 88,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Mal",
+  "name": "말라기",
+  "chapters": 4,
+  "cov": 89,
+  "kor_missing": [],
+  "t": "ot"
+ },
+ {
+  "osis": "Matt",
+  "name": "마태복음",
+  "chapters": 28,
+  "cov": 67,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Mark",
+  "name": "마가복음",
+  "chapters": 16,
+  "cov": 68,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Luke",
+  "name": "누가복음",
+  "chapters": 24,
+  "cov": 68,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "John",
+  "name": "요한복음",
+  "chapters": 21,
+  "cov": 74,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Acts",
+  "name": "사도행전",
+  "chapters": 28,
+  "cov": 65,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Rom",
+  "name": "로마서",
+  "chapters": 16,
+  "cov": 69,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "1Cor",
+  "name": "고린도전서",
+  "chapters": 16,
+  "cov": 67,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "2Cor",
+  "name": "고린도후서",
+  "chapters": 13,
+  "cov": 68,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Gal",
+  "name": "갈라디아서",
+  "chapters": 6,
+  "cov": 66,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Eph",
+  "name": "에베소서",
+  "chapters": 6,
+  "cov": 70,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Phil",
+  "name": "빌립보서",
+  "chapters": 4,
+  "cov": 65,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Col",
+  "name": "골로새서",
+  "chapters": 4,
+  "cov": 70,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "1Thess",
+  "name": "데살로니가전서",
+  "chapters": 5,
+  "cov": 70,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "2Thess",
+  "name": "데살로니가후서",
+  "chapters": 3,
+  "cov": 69,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "1Tim",
+  "name": "디모데전서",
+  "chapters": 6,
+  "cov": 55,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "2Tim",
+  "name": "디모데후서",
+  "chapters": 4,
+  "cov": 61,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Titus",
+  "name": "디도서",
+  "chapters": 3,
+  "cov": 57,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Phlm",
+  "name": "빌레몬서",
+  "chapters": 1,
+  "cov": 66,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Heb",
+  "name": "히브리서",
+  "chapters": 13,
+  "cov": 62,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Jas",
+  "name": "야고보서",
+  "chapters": 5,
+  "cov": 61,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "1Pet",
+  "name": "베드로전서",
+  "chapters": 5,
+  "cov": 60,
+  "kor_missing": [
+   "5"
+  ],
+  "t": "nt"
+ },
+ {
+  "osis": "2Pet",
+  "name": "베드로후서",
+  "chapters": 3,
+  "cov": 58,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "1John",
+  "name": "요한일서",
+  "chapters": 5,
+  "cov": 80,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "2John",
+  "name": "요한이서",
+  "chapters": 1,
+  "cov": 78,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "3John",
+  "name": "요한삼서",
+  "chapters": 1,
+  "cov": 70,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Jude",
+  "name": "유다서",
+  "chapters": 1,
+  "cov": 57,
+  "kor_missing": [],
+  "t": "nt"
+ },
+ {
+  "osis": "Rev",
+  "name": "요한계시록",
+  "chapters": 22,
+  "cov": 65,
+  "kor_missing": [],
+  "t": "nt"
+ }
+]
