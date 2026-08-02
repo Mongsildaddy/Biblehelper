@@ -42,6 +42,10 @@ select{background:var(--ink2);color:var(--vellum);border:1px solid #4a4f6a;borde
 select.book{min-width:118px}select.chap{min-width:76px}
 .chap{padding:34px 0 8px;text-align:center;border-bottom:1px solid var(--line);margin-bottom:4px}
 .chap .bk{font-size:13px;letter-spacing:.28em;color:var(--gold)}.chap h1{font-size:32px;margin:6px 0 4px}
+/* 장 제목을 누르면 그 장의 주석이 열린다 */
+.chap h1 button{background:0;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;border-bottom:1px dashed var(--line)}
+.chap h1 button:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.chap .cta{font-size:12px;color:var(--muted);margin-top:6px}
 .chap .sub{font-size:13px;color:var(--muted)}
 .cov{display:inline-block;margin-top:12px;font-size:12px;color:var(--muted);background:var(--vellum2);border:1px solid var(--line);border-radius:20px;padding:5px 14px}
 .cov b{color:var(--gold);font-weight:700}
@@ -103,6 +107,18 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .modal label.chk input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
 .modal .ok{background:var(--ink);color:var(--vellum);border:0;padding:9px 24px;border-radius:3px;font-family:inherit;font-size:14px;cursor:pointer}
 .modal .ok:hover{background:var(--gold);color:var(--ink)}
+/* ── 주석 ─────────────────────────────────────────────────────────────── */
+.modal .sheet.wide{width:760px}
+.comm-src{font-size:12px;color:var(--muted);margin:-10px 0 14px}
+.comm-sub{background:var(--vellum2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:3px;padding:10px 13px;font-size:12.5px;color:var(--ink2);line-height:1.65;margin-bottom:16px}
+.comm-body{font-size:15px;line-height:1.9;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.comm-body .v{display:block;margin:20px 0 4px;font-size:13px;letter-spacing:.1em;color:var(--gold);font-weight:700}
+.comm-body .v:first-child{margin-top:0}
+.comm-wait{text-align:center;padding:44px 10px;color:var(--muted);font-size:14px;line-height:1.9}
+.comm-wait .dot{display:inline-block;width:34px;height:34px;margin-bottom:14px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.comm-wait .tries{font-size:12px;color:var(--pending);margin-top:8px}
+.comm-foot{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.7}
 .modal .ways{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .modal .ways .ok{text-decoration:none;display:inline-block;text-align:center;min-width:230px}
 .modal .acct{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;background:var(--vellum2);border:1px solid var(--line);border-radius:3px;padding:10px 14px;font-size:14px}
@@ -190,7 +206,10 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <select id="book" class="book"></select><select id="chap" class="chap"></select>
 <button class="give-btn" id="give-btn" hidden>♡ 후원</button></div></div></header>
 <div class="wrap">
-<div class="chap"><div class="bk" id="c-bk"></div><h1 id="c-title"></h1><div class="sub" id="c-sub"></div><div class="cov" id="c-cov"></div></div>
+<div class="chap"><div class="bk" id="c-bk"></div>
+<h1><button id="c-title" type="button" title="이 장의 주석 보기"></button></h1>
+<div class="sub" id="c-sub"></div><div class="cov" id="c-cov"></div>
+<div class="cta" id="c-cta" hidden>↑ 장 제목을 누르면 이 장의 주석을 볼 수 있습니다</div></div>
 <div id="text"><div class="loading"><div class="big">Ἐμμαοῦς</div>불러오는 중…</div></div>
 <div class="hint">↑ 원어 단어를 누르면 뜻 · 품사와 함께 <b>그 단어가 쓰인 성경의 모든 구절</b>이 열립니다 (구절을 누르면 이동)</div>
 <section class="give" id="give-box" hidden>
@@ -240,6 +259,17 @@ function trackEvent(name,params){gtag('event',name,params||{});}
   </div>
 </div></div>
 
+<!-- 장별 주석 -->
+<div class="modal" id="comm" role="dialog" aria-modal="true" aria-labelledby="comm-h">
+<div class="sheet wide">
+  <button class="x" id="comm-x" aria-label="닫기">×</button>
+  <h2 id="comm-h">주석</h2>
+  <div class="comm-src" id="comm-src"></div>
+  <div id="comm-note"></div>
+  <div id="comm-out"></div>
+  <div class="comm-foot" id="comm-foot"></div>
+</div></div>
+
 <!-- 후원 안내 -->
 <div class="modal" id="give-modal" role="dialog" aria-modal="true" aria-labelledby="give-h">
 <div class="sheet">
@@ -272,7 +302,7 @@ let OCC=null,occToken=0;
    server/README.md 의 배포 절차를 마친 뒤 발급받은 주소를 여기에 넣으면 켜진다.
    커밋하기 전에 시험해 보려면 개발자 도구 콘솔에서 아래처럼 덮어쓸 수 있다.
      localStorage.setItem('miqra.sumapi','https://…workers.dev'); location.reload(); */
-let SUMAPI='';
+let SUMAPI='https://miqra-sum.chlqkrtk12.workers.dev';
 try{SUMAPI=localStorage.getItem('miqra.sumapi')||SUMAPI;}catch(e){}
 const SUM_DISC='요약한 내용은 AI의 결과로 정리된 것입니다. 성경 연구의 참고 자료로만 활용해 주세요.';
 let SUM={};
@@ -356,6 +386,7 @@ function render(ch,hlV,hlS){
     text.insertAdjacentHTML('beforeend',`<div class="verse" id="v-${v}"><span class="vnum">${v}</span>${korLine}<div class="kjv">${kjv[v]||''}</div>${words.length?`<div class="heb-row${curTest==='nt'?' grk':''}">${chips}</div>`:''}</div>`);
   });
   if(hlV!=null)spotlight(hlV);
+  document.getElementById('c-cta').hidden=!SUMAPI;
   document.title=m.name+' '+ch+'장 · 엠마오 원어대조성경';
   track('/'+encodeURIComponent(m.name)+'/'+ch,m.name+' '+ch+'장');
 }
@@ -606,10 +637,127 @@ giveModal.addEventListener('click',e=>{if(e.target===giveModal)closeModal(giveMo
 document.getElementById('give-link').addEventListener('click',()=>trackEvent('give_click',{from:'footer'}));
 buildGive();
 
+/* ── 장별 주석 ─────────────────────────────────────────────────────────
+   퍼블릭도메인 주석(기본 아담 클라크)을 Worker가 가져와 한국어로 옮겨 준다.
+   한 번 번역된 장은 서버 KV에 남으므로 다음부터는 즉시 뜬다.
+
+   재시도가 필요한 이유: Anthropic 앞단이 Cloudflare Workers 의 나가는 IP
+   일부를 403 으로 막는데, 그 차단이 워커 인스턴스에 고정되어 있다. 워커 안에서
+   다시 걸어도 같은 IP로 나가 소용이 없고, 요청 자체를 새로 보내야 다른
+   인스턴스에 걸린다. 한 번에 약 40% 확률이라 여러 번 걸면 거의 붙는다. */
+const COMM_TRIES = 9, COMM_KEY = 'miqra.comm.';
+const comm = document.getElementById('comm');
+let commBusy = false;
+
+/* 이 장에 나오는 낱말의 영문뜻 → 한국어뜻. 우리가 정리한 개역한글 표기를
+   번역에 그대로 쓰게 하려는 것이라, 고유명사(대문자로 시작)를 앞에 둔다. */
+function chapterGlossary(ch){
+  const words=(CUR.heb||{})[String(ch)]||{}, seen=new Map();
+  Object.values(words).forEach(ws=>ws.forEach(w=>{
+    const L=LEX[w.s]; if(!L||!L.ge||!L.ko)return;
+    const ge=String(L.ge).split(/[:/]/)[0].trim();
+    if(ge&&!seen.has(ge))seen.set(ge,L.ko);
+  }));
+  const all=[...seen.entries()];
+  const proper=all.filter(([e])=>/^[A-Z]/.test(e));
+  const rest=all.filter(([e])=>!/^[A-Z]/.test(e));
+  return Object.fromEntries([...proper,...rest].slice(0,220));
+}
+
+function commCacheGet(k){try{return localStorage.getItem(COMM_KEY+k);}catch(e){return null;}}
+function commCacheSet(k,v){try{localStorage.setItem(COMM_KEY+k,v);}catch(e){}}
+
+/* 절 표시 [3절] 을 눈에 띄게 감싼다. 그 밖에는 원문 줄바꿈을 그대로 살린다. */
+function renderComm(text){
+  return esc(text).replace(/^\[([^\]\n]{1,12})\]/gm,'<span class="v">$1</span>');
+}
+
+async function openCommentary(){
+  if(commBusy)return;
+  const m=MANI[curBi], ch=+chapSel.value, osis=CUR.osis;
+  const title=`${m.name} ${ch}장`;
+  document.getElementById('comm-h').textContent=title+' 주석';
+  document.getElementById('comm-src').textContent='';
+  document.getElementById('comm-note').innerHTML='';
+  document.getElementById('comm-foot').innerHTML='';
+  const out=document.getElementById('comm-out');
+  openModal(comm);
+  trackEvent('commentary_open',{book:m.name,chapter:ch});
+
+  const key=`${osis}.${ch}`;
+  const cached=commCacheGet(key);
+  if(cached){ try{ paint(JSON.parse(cached)); return; }catch(e){} }
+
+  if(!SUMAPI){
+    out.innerHTML='<div class="comm-wait">주석 서버가 연결되어 있지 않습니다.</div>';
+    return;
+  }
+
+  commBusy=true;
+  const glossary=chapterGlossary(ch);
+  for(let t=1;t<=COMM_TRIES;t++){
+    out.innerHTML=`<div class="comm-wait"><div class="dot"></div><br>
+      ${esc(title)} 주석을 한국어로 옮기는 중입니다.<br>
+      처음 여는 장은 1~2분쯤 걸리고, 다음부터는 바로 열립니다.
+      ${t>1?`<div class="tries">연결을 다시 시도하는 중… (${t}/${COMM_TRIES})</div>`:''}</div>`;
+    let r,d;
+    try{
+      r=await fetch(SUMAPI+'/commentary',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({osis,chapter:ch,commentary:'adam-clarke',glossary})
+      });
+      d=await r.json();
+    }catch(e){ d={error:String(e),retryable:true}; }
+
+    if(r&&r.ok&&d.text){
+      commBusy=false;
+      commCacheSet(key,JSON.stringify(d));
+      trackEvent('commentary_done',{book:m.name,chapter:ch,tries:t,used:d.id||''});
+      return paint(d);
+    }
+    if(d&&d.unavailable){
+      commBusy=false;
+      out.innerHTML=`<div class="comm-wait">이 장은 공개된 주석이 없습니다.<br>
+        <span style="font-size:12.5px">퍼블릭도메인으로 풀린 주석에 이 본문이 빠져 있습니다.</span></div>`;
+      return;
+    }
+    /* 재시도 대상이 아니면 더 걸어 봐야 소용없다 */
+    if(d&&d.error&&!d.retryable&&!(r&&r.status>=500)){
+      commBusy=false;
+      out.innerHTML=`<div class="comm-wait">주석을 불러오지 못했습니다.<br>
+        <span style="font-size:12.5px">${esc(String(d.error).slice(0,160))}</span></div>`;
+      return;
+    }
+    await new Promise(s=>setTimeout(s,600));
+  }
+  commBusy=false;
+  out.innerHTML=`<div class="comm-wait">지금은 연결이 원활하지 않습니다.<br>
+    잠시 뒤 다시 눌러 주세요.<br>
+    <span style="font-size:12.5px">이미 번역된 장은 즉시 열립니다.</span></div>`;
+
+  function paint(d){
+    commBusy=false;
+    document.getElementById('comm-src').textContent=
+      (d.commentary||'주석')+(d.cached?' · 저장된 번역':'');
+    document.getElementById('comm-note').innerHTML = d.substituted
+      ? `<div class="comm-sub">이 책은 <b>아담 클라크 주석</b>에 수록되어 있지 않아
+         <b>${esc(d.commentary||'')}</b>으로 대신 보여 드립니다.</div>` : '';
+    out.innerHTML=`<div class="comm-body">${renderComm(d.text)}</div>`;
+    document.getElementById('comm-foot').innerHTML=
+      `원문 ${esc(d.commentary||'')} · 퍼블릭도메인 (CC0)<br>
+       한국어 번역은 AI가 옮긴 것입니다. 원문과 다를 수 있으니 성경 연구의 참고 자료로만 활용해 주세요.`;
+  }
+}
+
+document.getElementById('c-title').onclick=openCommentary;
+document.getElementById('comm-x').onclick=()=>{ if(!commBusy)closeModal(comm); };
+comm.addEventListener('click',e=>{ if(e.target===comm&&!commBusy)closeModal(comm); });
+
 /* 낱말 패널이 열려 있으면 Esc 는 그쪽이 먼저 가져간다. 모달이 열려 있을 때만 여기서 처리 */
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  if(giveModal.classList.contains('on'))closeModal(giveModal);
+  if(comm.classList.contains('on')){ if(!commBusy)closeModal(comm); }
+  else if(giveModal.classList.contains('on'))closeModal(giveModal);
   else if(guide.classList.contains('on'))closeGuide();
 });
 
