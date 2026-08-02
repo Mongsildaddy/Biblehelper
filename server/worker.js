@@ -15,6 +15,10 @@
  *   KV      SUMCACHE            결과 캐시. 같은 요청은 최초 1회만 과금된다.
  */
 
+/* Workers 의 fetch 는 User-Agent 를 붙이지 않는다. Anthropic 앞단이 그런 요청을
+   봇으로 보고 403 forbidden 을 간헐적으로 돌려주므로 명시한다. */
+const UA = 'emmaus-bible-worker/1.0 (+https://emmaustransbible.co.kr)';
+
 const MAX_VERSES = 60;
 const DEFAULT_MODEL = 'claude-sonnet-5';
 
@@ -28,13 +32,24 @@ const COMMENTARIES = {
   'keil-delitzsch': '카일-델리취 구약주석'
 };
 
-/* 우리 매니페스트의 OSIS 코드 → 주석 API의 3글자 책 코드.
-   아가(Song)는 어느 주석에도 없어서 의도적으로 빠져 있다. */
+/* 클라크는 9권이 통째로 빠져 있다(신명기·사사기·시편·잠언·전도서·예레미야·
+   요엘·말라기·마태복음). 하필 설교에 가장 많이 쓰이는 책들이라, 없는 책은
+   대신 볼 주석을 순서대로 시도한다. 어느 주석을 실제로 썼는지는 응답의
+   commentary 필드로 돌려주므로 화면에 그대로 밝힐 수 있다. */
+const FALLBACK = {
+  'adam-clarke': ['john-gill', 'jamieson-fausset-brown', 'matthew-henry'],
+  'matthew-henry': ['john-gill', 'jamieson-fausset-brown'],
+  'keil-delitzsch': ['john-gill', 'jamieson-fausset-brown'],
+  'jamieson-fausset-brown': ['john-gill'],
+  'john-gill': ['jamieson-fausset-brown']
+};
+
+/* 우리 매니페스트의 OSIS 코드 → 주석 API의 3글자 책 코드. 66권 전부. */
 const OSIS2API = {
   Gen:'GEN', Exod:'EXO', Lev:'LEV', Num:'NUM', Deut:'DEU', Josh:'JOS', Judg:'JDG',
   Ruth:'RUT', '1Sam':'1SA', '2Sam':'2SA', '1Kgs':'1KI', '2Kgs':'2KI', '1Chr':'1CH',
   '2Chr':'2CH', Ezra:'EZR', Neh:'NEH', Esth:'EST', Job:'JOB', Ps:'PSA', Prov:'PRO',
-  Eccl:'ECC', Isa:'ISA', Jer:'JER', Lam:'LAM', Ezek:'EZK', Dan:'DAN', Hos:'HOS',
+  Eccl:'ECC', Song:'SNG', Isa:'ISA', Jer:'JER', Lam:'LAM', Ezek:'EZK', Dan:'DAN', Hos:'HOS',
   Joel:'JOL', Amos:'AMO', Obad:'OBA', Jonah:'JON', Mic:'MIC', Nah:'NAM', Hab:'HAB',
   Zeph:'ZEP', Hag:'HAG', Zech:'ZEC', Mal:'MAL', Matt:'MAT', Mark:'MRK', Luke:'LUK',
   John:'JHN', Acts:'ACT', Rom:'ROM', '1Cor':'1CO', '2Cor':'2CO', Gal:'GAL', Eph:'EPH',
@@ -64,13 +79,57 @@ export default {
     try { body = await request.json(); } catch { return json({ error: '잘못된 요청 형식입니다.' }, 400, cors); }
 
     try {
+      if (path === '/diag') return await handleDiag(env, cors, body);
       if (path === '/commentary') return await handleCommentary(env, body, cors);
       return await handleSummary(env, body, cors);
     } catch (e) {
-      return json({ error: String(e.message || e) }, 502, cors);
+      return json({ error: String(e.message || e), retryable: !!e.retryable }, 502, cors);
     }
   }
 };
+
+/* ── 진단 ─────────────────────────────────────────────────────────────
+   키 값 자체는 절대 돌려주지 않는다. 길이·접두어·공백 여부 같은 형식 정보와,
+   가장 작은 실제 호출의 응답만 그대로 보여 준다. 문제를 잡고 나면 지운다. */
+
+async function handleDiag(env, cors, opt) {
+  const k = String(env.ANTHROPIC_API_KEY || '');
+  const mt = Number(opt && opt.max_tokens) || 16;
+  const pad = Number(opt && opt.chars) || 0;
+  const shape = {
+    키_길이: k.length,
+    접두어_정상: k.startsWith('sk-ant-'),
+    앞뒤공백_있음: k !== k.trim(),
+    줄바꿈_있음: /[\r\n]/.test(k),
+    ascii_아닌문자: /[^\x21-\x7e]/.test(k),
+    모델: env.MODEL || DEFAULT_MODEL,
+    KV_연결됨: !!env.SUMCACHE
+  };
+
+  let call;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': k.trim(),
+        'anthropic-version': '2023-06-01',
+        'User-Agent': UA,
+        'Accept': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: env.MODEL || DEFAULT_MODEL,
+        max_tokens: mt,
+        messages: [{ role: 'user', content: pad ? 'ping. 무시할 더미: ' + 'a'.repeat(pad) : 'ping' }]
+      })
+    });
+    call = { max_tokens: mt, prompt_chars: pad, status: res.status, body: (await res.text()).slice(0, 400) };
+  } catch (e) {
+    call = { throw: String(e && e.message || e) };
+  }
+  return json({ shape, call }, 200, cors);
+}
 
 /* ── 낱말×책 AI 요약 ──────────────────────────────────────────────────── */
 
@@ -109,17 +168,21 @@ async function handleCommentary(env, body, cors) {
   const cacheKey = `c:${id}:${osis}.${chapter}`;
   if (env.SUMCACHE) {
     const hit = await env.SUMCACHE.get(cacheKey);
-    if (hit) return json({ text: hit, commentary: COMMENTARIES[id], cached: true }, 200, cors);
+    if (hit) {
+      try { return json({ ...JSON.parse(hit), cached: true }, 200, cors); }
+      catch { /* 옛 형식(본문만 저장) 캐시는 아래로 흘려보낸다 */ }
+    }
   }
 
-  /* 1. 퍼블릭도메인 주석 원문을 가져온다 */
-  const src = await fetch(`${COMMENTARY_API}/${id}/${code}/${chapter}.json`);
-  if (src.status === 404) return json({ error: '이 장은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
-  if (!src.ok) throw new Error(`주석 원문을 가져오지 못했습니다 (${src.status})`);
-  const doc = await src.json();
-
-  const blocks = flattenCommentary(doc);
-  if (!blocks.length) return json({ error: '이 장은 주석 내용이 비어 있습니다.', unavailable: true }, 404, cors);
+  /* 1. 퍼블릭도메인 주석 원문을 가져온다. 없는 책이면 대체 주석으로 넘어간다. */
+  let used = id, blocks = null;
+  for (const cand of [id, ...(FALLBACK[id] || [])]) {
+    const doc = await fetchCommentary(cand, code, chapter);
+    if (!doc) continue;
+    const b = flattenCommentary(doc);
+    if (b.length) { used = cand; blocks = b; break; }
+  }
+  if (!blocks) return json({ error: '이 장은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
 
   /* 2. 고유명사 용어집. 클라이언트가 그 장에 나오는 낱말의 영문뜻→한국어뜻을
         보내 준다. 우리가 정리한 개역한글 표기를 그대로 쓰기 위한 것. */
@@ -131,14 +194,26 @@ async function handleCommentary(env, body, cors) {
   for (let i = 0; i < chunks.length; i++) {
     out.push(await translateChunk(env, {
       text: chunks[i], glossary, ref: `${osis} ${chapter}장`,
-      name: COMMENTARIES[id], part: i + 1, total: chunks.length
+      name: COMMENTARIES[used], part: i + 1, total: chunks.length
     }));
   }
   const text = out.join('\n\n').trim();
   if (!text) return json({ error: '번역이 생성되지 않았습니다.' }, 502, cors);
 
-  if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, text);
-  return json({ text, commentary: COMMENTARIES[id] }, 200, cors);
+  /* 어느 주석을 실제로 썼는지도 함께 캐시한다 */
+  const payload = { text, commentary: COMMENTARIES[used], id: used, substituted: used !== id };
+  if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, JSON.stringify(payload));
+  return json(payload, 200, cors);
+}
+
+/* helloao는 없는 장에도 HTTP 200 + HTML(SPA 폴백)을 돌려준다.
+   상태코드만 믿으면 HTML을 JSON으로 파싱하다 죽으므로 본문을 확인한다. */
+async function fetchCommentary(id, code, chapter) {
+  const res = await fetch(`${COMMENTARY_API}/${id}/${code}/${chapter}.json`);
+  if (!res.ok) return null;
+  const body = await res.text();
+  if (!body.trimStart().startsWith('{')) return null;
+  try { return JSON.parse(body); } catch { return null; }
 }
 
 /* 주석 JSON은 {chapter:{introduction, content:[{type:'verse',number,content:[...]}]}} 꼴.
@@ -228,27 +303,57 @@ function json(obj, status, headers) {
   });
 }
 
+/* Anthropic 앞단이 Cloudflare Workers 의 나가는 IP 일부를 403 forbidden 으로
+   막는다. 측정해 보니 차단은 요청별 무작위가 아니라 워커 인스턴스에 고정이다.
+   한 요청 안에서 연속 호출하면 3번 다 403이거나 3번 다 200이고, 요청을 새로
+   보내면 약 40%가 살아 있는 인스턴스에 걸린다. 따라서 워커 안에서 재시도해도
+   같은 IP로 나가 소용이 없고, 클라이언트가 요청 자체를 다시 보내야 한다.
+   여기 재시도는 429/5xx 같은 진짜 일시적 오류만 겨냥해 짧게 둔다.
+   403 은 재시도하지 않고 즉시 알려, 클라이언트가 다시 걸도록 한다. */
+const RETRY_MAX = 3;
+const RETRYABLE = new Set([408, 429, 500, 502, 503, 504, 529]);
+
 async function anthropic(env, prompt, maxTokens) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: env.MODEL || DEFAULT_MODEL,
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Anthropic API ${res.status} ${t.slice(0, 200)}`);
+  let last = '';
+  for (let attempt = 0; attempt < RETRY_MAX; attempt++) {
+    if (attempt) await sleep(250 * attempt + Math.floor(Math.random() * 250));
+    let res;
+    try {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': String(env.ANTHROPIC_API_KEY).trim(),
+          'anthropic-version': '2023-06-01',
+          'User-Agent': UA,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: env.MODEL || DEFAULT_MODEL,
+          max_tokens: maxTokens,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+    } catch (e) {
+      last = `연결 실패: ${e && e.message || e}`;
+      continue;
+    }
+    if (res.ok) {
+      const data = await res.json();
+      return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+    }
+    last = `${res.status} ${(await res.text()).slice(0, 200)}`;
+    if (!RETRYABLE.has(res.status)) break;
   }
-  const data = await res.json();
-  return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+  if (last.startsWith('403')) {
+    const e = new Error('일시적으로 연결이 막혔습니다. 잠시 후 다시 시도해 주세요.');
+    e.retryable = true;
+    throw e;
+  }
+  throw new Error(`Anthropic API 호출 실패 ${last}`);
 }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function callClaude(env, body, strong, book, verses) {
   const lines = verses.map(v => `${book} ${v.ref} ${String(v.text || '').slice(0, 200)}`).join('\n');
