@@ -18,3 +18,6 @@ tools/_kd_todo.txt
 tools/_ko_todo_G.txt
 tools/_ko_todo_H.txt
 tools/_ko_todo_Gname.txt
+server/.wrangler/
+server/node_modules/
+.dev.vars
