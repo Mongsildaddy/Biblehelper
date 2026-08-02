@@ -540,7 +540,7 @@ chapSel.addEventListener('change',e=>render(+e.target.value));
      account : 계좌 문자열. 그대로 보여 주고 복사 버튼이 붙는다.
                예) '카카오뱅크 3333-01-2345678 홍길동'
      etc     : 그 밖의 후원 링크 {label, url} 배열. 투네이션·PayPal 등 */
-const GIVE={ kakao:'', account:'', etc:[] };
+const GIVE={ kakao:'https://qr.kakaopay.com/FTpDPUYpp3e803411', account:'', etc:[] };
 
 function buildGive(){
   if(!(GIVE.kakao||GIVE.account||GIVE.etc.length))return;
