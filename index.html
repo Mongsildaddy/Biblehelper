@@ -111,25 +111,25 @@ select.book{min-width:118px}select.chap{min-width:76px}
 @media(max-width:560px){.panel{width:100%;max-width:100%;top:auto;bottom:0;height:82%;transform:translateY(100%);border-radius:14px 14px 0 0}.panel.on{transform:translateY(0)}.chap h1{font-size:26px}.kor{font-size:18px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<!-- ── Google Analytics 4 ──────────────────────────────────────────────────
+     Search Console 이 소유확인을 할 때 렌더링 결과가 아니라 HTML 소스에서
+     이 script 태그를 그대로 찾는다. 그래서 동적 주입이 아니라 정적으로 둔다. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EDX6MJLP70"></script>
 <script>
-/* ── 방문 통계 ──────────────────────────────────────────────────────────
-   아래 두 ID만 채우면 켜진다. 빈 문자열이면 스크립트를 아예 안 불러오므로
-   ID 없이 배포해도 콘솔 에러가 나지 않는다.
-     GA_ID  : Google Analytics 4 측정 ID (G-XXXXXXXXXX)
-     NA_ID  : 네이버 애널리틱스 ID (서치어드바이저에서 발급)
-   이 앱은 한 페이지에서 책·장을 바꾸는 구조라 기본 스니펫만으로는 방문 1회로만
-   잡힌다. 그래서 track()으로 책/장 이동과 낱말 조회를 따로 보낸다. */
-var GA_ID='G-EDX6MJLP70', NA_ID='';
+var GA_ID='G-EDX6MJLP70';
 window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
-if(GA_ID){
-  var g=document.createElement('script');
-  g.async=true;g.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;
-  document.head.appendChild(g);
-  gtag('js',new Date());
-  /* 자동 페이지뷰는 끈다. 아래 track()이 책·장까지 담아 직접 보낸다 */
-  gtag('config',GA_ID,{send_page_view:false});
-}
+gtag('js',new Date());
+/* 자동 페이지뷰는 끈다. 아래 track()이 책·장까지 담아 직접 보낸다.
+   이 앱은 한 페이지에서 책·장을 바꾸는 구조라 기본 스니펫만으로는
+   방문 1회로만 잡히기 때문이다. */
+gtag('config',GA_ID,{send_page_view:false});
+</script>
+<script>
+/* ── 네이버 애널리틱스 ───────────────────────────────────────────────────
+   NA_ID 를 채우면 켜진다. 비면 스크립트를 아예 안 불러오므로 콘솔 에러가 없다.
+   서치어드바이저에서 발급받는다. */
+var NA_ID='';
 if(NA_ID){
   var n=document.createElement('script');
   n.async=true;n.src='//wcs.naver.net/wcslog.js';
@@ -142,11 +142,11 @@ if(NA_ID){
 }
 /* 화면 전환을 가상 페이지뷰로 기록한다. path 예: /창세기/1 */
 function track(path,title){
-  if(GA_ID)gtag('event','page_view',{page_path:path,page_title:title});
+  gtag('event','page_view',{page_path:path,page_title:title});
   if(NA_ID&&window.wcs){window.wcs_add.wa=NA_ID;wcs_do();}
 }
 /* 낱말 조회처럼 페이지 이동이 아닌 행동은 이쪽으로 */
-function trackEvent(name,params){if(GA_ID)gtag('event',name,params||{});}
+function trackEvent(name,params){gtag('event',name,params||{});}
 </script>
 </head><body>
 <header><div class="hbar">
