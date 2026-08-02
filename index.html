@@ -103,7 +103,12 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .modal label.chk input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
 .modal .ok{background:var(--ink);color:var(--vellum);border:0;padding:9px 24px;border-radius:3px;font-family:inherit;font-size:14px;cursor:pointer}
 .modal .ok:hover{background:var(--gold);color:var(--ink)}
-.modal .qr{display:block;margin:16px auto 4px;width:170px;height:170px;border:1px solid var(--line);border-radius:3px;background:#fff}
+.modal .ways{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.modal .ways .ok{text-decoration:none;display:inline-block;text-align:center;min-width:230px}
+.modal .acct{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;background:var(--vellum2);border:1px solid var(--line);border-radius:3px;padding:10px 14px;font-size:14px}
+.modal .acct span{font-family:ui-monospace,monospace;letter-spacing:.01em;word-break:break-all}
+.modal .copy{background:transparent;border:1px solid var(--line);color:var(--ink2);padding:4px 11px;border-radius:3px;font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.modal .copy:hover{background:var(--ink);color:var(--vellum);border-color:var(--ink)}
 @media(max-width:560px){.modal{padding:12px}.modal .sheet{padding:24px 20px 18px}.modal .acts{justify-content:center}}
 .occsum{font-size:13px;color:#b7bdd6;margin-bottom:10px}.occsum b{color:var(--gold-lite)}
 .bchips{display:flex;flex-wrap:wrap;gap:6px}
@@ -196,7 +201,7 @@ function trackEvent(name,params){gtag('event',name,params||{});}
   의무가 아니고, 후원하지 않아도 모든 기능을 똑같이 쓰실 수 있습니다.</p>
   <div class="row2">
     <a class="primary" id="give-link" href="#" target="_blank" rel="noopener">후원하기 ↗</a>
-    <span class="note">토스로 연결됩니다 · 정기결제 아님 · 계정 만들 필요 없음</span>
+    <span class="note">정기결제가 아닙니다 · 가입할 필요 없습니다</span>
   </div>
 </section>
 </div>
@@ -250,12 +255,9 @@ function trackEvent(name,params){gtag('event',name,params||{});}
     <span style="font-size:12.5px;color:var(--muted)">
     후원하지 않으셔도 모든 기능을 똑같이 쓰실 수 있고, 앞으로도 그렇습니다.</span>
   </p>
-  <div class="acts" style="justify-content:center">
-    <a class="ok" id="give-link2" href="#" target="_blank" rel="noopener"
-       style="text-decoration:none;display:inline-block">토스로 후원하기 ↗</a>
-  </div>
-  <div class="lead" style="text-align:center;margin:12px 0 0">
-    토스 앱이 없어도 링크에서 계좌 이체로 보낼 수 있습니다 · 정기결제가 아닙니다
+  <div class="ways" id="give-ways"></div>
+  <div class="lead" style="text-align:center;margin:14px 0 0">
+    정기결제가 아닙니다 · 원하실 때 한 번씩만 보내 주시면 됩니다
   </div>
 </div></div>
 <script>
@@ -530,14 +532,50 @@ bookSel.addEventListener('change',e=>loadBook(+e.target.value));
 chapSel.addEventListener('change',e=>render(+e.target.value));
 
 /* ── 후원 ──────────────────────────────────────────────────────────────
-   GIVE_URL 을 채우면 헤더의 ♡ 후원 버튼과 본문 하단 안내가 켜진다.
-   비어 있으면 관련 UI를 통째로 감추므로, 링크 없이 배포해도 깨지지 않는다.
-   토스 아이디는 토스 앱 → 전체 → 토스아이디 설정에서 만든다.
-     예) 'https://toss.me/emmaus' */
-const GIVE_URL='';
-if(GIVE_URL){
-  ['give-link','give-link2'].forEach(id=>document.getElementById(id).href=GIVE_URL);
+   결제 수단은 언제든 없어질 수 있으니(토스아이디가 2024년에 종료됐다) 한 곳에
+   묶지 않는다. 아래에서 채운 항목만 화면에 나타나고, 전부 비면 후원 UI 자체가
+   숨겨지므로 링크 없이 배포해도 깨지지 않는다.
+     kakao   : 카카오페이 코드송금 링크 (https://qr.kakaopay.com/…)
+               카카오페이 앱 → 홈 → 검색 → '코드로 송금받기'
+     account : 계좌 문자열. 그대로 보여 주고 복사 버튼이 붙는다.
+               예) '카카오뱅크 3333-01-2345678 홍길동'
+     etc     : 그 밖의 후원 링크 {label, url} 배열. 투네이션·PayPal 등 */
+const GIVE={ kakao:'', account:'', etc:[] };
+
+function buildGive(){
+  if(!(GIVE.kakao||GIVE.account||GIVE.etc.length))return;
   ['give-btn','give-box','guide-give'].forEach(id=>document.getElementById(id).hidden=false);
+  /* 하단 안내의 대표 버튼은 링크가 있을 때만. 계좌뿐이면 모달을 열게 한다. */
+  const foot=document.getElementById('give-link'), primary=GIVE.kakao||(GIVE.etc[0]||{}).url;
+  if(primary){foot.href=primary;foot.target='_blank';}
+  else{foot.removeAttribute('target');foot.href='#';foot.textContent='후원 방법 보기';
+       foot.onclick=e=>{e.preventDefault();openModal(giveModal);};}
+
+  const box=document.getElementById('give-ways'), parts=[];
+  if(GIVE.kakao)parts.push(`<a class="ok gw" href="${esc(GIVE.kakao)}" target="_blank" rel="noopener" data-m="kakao">카카오페이로 후원하기 ↗</a>`);
+  GIVE.etc.forEach(o=>parts.push(`<a class="ok gw" href="${esc(o.url)}" target="_blank" rel="noopener" data-m="${esc(o.label)}">${esc(o.label)} ↗</a>`));
+  if(GIVE.account)parts.push(`<div class="acct"><span id="acct-t">${esc(GIVE.account)}</span><button class="copy" id="acct-c">복사</button></div>`);
+  box.innerHTML=parts.join('');
+  box.addEventListener('click',e=>{
+    const a=e.target.closest('.gw');
+    if(a){trackEvent('give_click',{method:a.dataset.m});return;}
+    if(e.target.id==='acct-c'){
+      const b=e.target, t=document.getElementById('acct-t').textContent;
+      const flash=m=>{b.textContent=m;setTimeout(()=>b.textContent='복사',1800);};
+      /* clipboard API 는 보안 컨텍스트에서만, 그것도 사용자 동작 안에서만 된다.
+         막히면 계좌를 선택해 주고 그 사실을 알린다 — 조용히 실패하면 눌러도
+         아무 일도 없는 것처럼 보인다. */
+      if(navigator.clipboard)
+        navigator.clipboard.writeText(t).then(()=>flash('복사됨'))
+          .catch(()=>{selectAcct();flash('길게 눌러 복사');});
+      else{selectAcct();flash('길게 눌러 복사');}
+      trackEvent('give_click',{method:'account_copy'});
+    }
+  });
+  function selectAcct(){
+    const el=document.getElementById('acct-t'),rg=document.createRange();
+    rg.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(rg);
+  }
 }
 
 /* ── 모달 ──────────────────────────────────────────────────────────────
@@ -566,7 +604,7 @@ document.getElementById('give-btn').onclick=()=>{openModal(giveModal);trackEvent
 document.getElementById('give-x').onclick=()=>closeModal(giveModal);
 giveModal.addEventListener('click',e=>{if(e.target===giveModal)closeModal(giveModal);});
 document.getElementById('give-link').addEventListener('click',()=>trackEvent('give_click',{from:'footer'}));
-document.getElementById('give-link2').addEventListener('click',()=>trackEvent('give_click',{from:'modal'}));
+buildGive();
 
 /* 낱말 패널이 열려 있으면 Esc 는 그쪽이 먼저 가져간다. 모달이 열려 있을 때만 여기서 처리 */
 document.addEventListener('keydown',e=>{
