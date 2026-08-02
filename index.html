@@ -75,6 +75,36 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .pendbox{font-size:14px;color:#c3c9e0;padding:12px 14px;background:#232842;border-radius:4px;border-left:3px solid var(--gold)}.pendbox b{color:var(--gold-lite)}
 .panel .foot{padding:14px 24px;border-top:1px solid #363b57;font-size:11px;color:#6f7590;line-height:1.5}
 .hint{text-align:center;color:var(--muted);font-size:13px;padding:18px 0 0}
+/* ── 후원 ─────────────────────────────────────────────────────────────── */
+.give-btn{background:transparent;color:var(--gold-lite);border:1px solid #6d6144;padding:6px 12px;border-radius:3px;font-family:inherit;font-size:12px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.give-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.give{margin:34px 0 0;padding:22px 24px;border:1px solid var(--line);background:var(--vellum2);border-radius:3px}
+.give h3{font-size:15px;letter-spacing:.02em;margin-bottom:8px}
+.give p{font-size:13.5px;color:var(--ink2);line-height:1.75}
+.give .amt{color:var(--gold);font-weight:700}
+.give .row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.give a.primary{display:inline-block;background:var(--ink);color:var(--vellum);text-decoration:none;padding:9px 20px;border-radius:3px;font-size:13.5px}
+.give a.primary:hover{background:var(--gold);color:var(--ink)}
+.give .note{font-size:11.5px;color:var(--muted)}
+/* ── 모달 (가이드 · 후원) ─────────────────────────────────────────────── */
+.modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.on{display:flex}
+.modal .sheet{background:var(--vellum);color:var(--ink);width:520px;max-width:100%;max-height:88vh;overflow-y:auto;border-radius:4px;border-top:3px solid var(--gold);box-shadow:0 24px 70px rgba(0,0,0,.4);padding:28px 30px 22px;position:relative}
+.modal .x{position:absolute;top:12px;right:14px;background:0;border:0;color:var(--muted);font-size:26px;line-height:1;cursor:pointer}
+.modal h2{font-size:21px;letter-spacing:.02em;margin-bottom:4px}
+.modal .lead{font-size:13px;color:var(--muted);margin-bottom:18px}
+.modal ol{margin:0 0 6px 20px}
+.modal li{font-size:14px;line-height:1.85;margin-bottom:10px}
+.modal li b{color:var(--gold)}
+.modal .sub2{display:block;font-size:12.5px;color:var(--ink2);line-height:1.65;margin-top:2px}
+.modal .give-in{margin-top:18px;padding:14px 16px;background:var(--vellum2);border:1px solid var(--line);border-radius:3px;font-size:12.5px;color:var(--ink2);line-height:1.7}
+.modal .acts{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.modal label.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none}
+.modal label.chk input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
+.modal .ok{background:var(--ink);color:var(--vellum);border:0;padding:9px 24px;border-radius:3px;font-family:inherit;font-size:14px;cursor:pointer}
+.modal .ok:hover{background:var(--gold);color:var(--ink)}
+.modal .qr{display:block;margin:16px auto 4px;width:170px;height:170px;border:1px solid var(--line);border-radius:3px;background:#fff}
+@media(max-width:560px){.modal{padding:12px}.modal .sheet{padding:24px 20px 18px}.modal .acts{justify-content:center}}
 .occsum{font-size:13px;color:#b7bdd6;margin-bottom:10px}.occsum b{color:var(--gold-lite)}
 .bchips{display:flex;flex-wrap:wrap;gap:6px}
 .bchip{background:#232842;color:#c3c9e0;border:1px solid #363b57;border-radius:3px;padding:5px 9px;font-size:12px;font-family:inherit;cursor:pointer}
@@ -152,11 +182,23 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <header><div class="hbar">
 <div class="brand"><b>Ἐ <i>엠마오</i></b><span>Emmaus · 원어대조성경 (신구약)</span></div>
 <div class="controls"><div class="tabs"><button class="on" id="tab-ot">구약</button><button id="tab-nt">신약</button></div>
-<select id="book" class="book"></select><select id="chap" class="chap"></select></div></div></header>
+<select id="book" class="book"></select><select id="chap" class="chap"></select>
+<button class="give-btn" id="give-btn" hidden>♡ 후원</button></div></div></header>
 <div class="wrap">
 <div class="chap"><div class="bk" id="c-bk"></div><h1 id="c-title"></h1><div class="sub" id="c-sub"></div><div class="cov" id="c-cov"></div></div>
 <div id="text"><div class="loading"><div class="big">Ἐμμαοῦς</div>불러오는 중…</div></div>
 <div class="hint">↑ 원어 단어를 누르면 뜻 · 품사와 함께 <b>그 단어가 쓰인 성경의 모든 구절</b>이 열립니다 (구절을 누르면 이동)</div>
+<section class="give" id="give-box" hidden>
+  <h3>이 도구는 후원으로 유지됩니다</h3>
+  <p>엠마오 원어대조성경은 광고 없이, 로그인 없이, 누구나 무료로 씁니다.
+  다만 AI 요약을 만드는 API 비용과 서버 유지비가 매달 실제로 나갑니다.
+  도움이 되셨다면 <span class="amt">한 달에 2,000~5,000원</span> 정도를 자발적으로 보태 주세요.
+  의무가 아니고, 후원하지 않아도 모든 기능을 똑같이 쓰실 수 있습니다.</p>
+  <div class="row2">
+    <a class="primary" id="give-link" href="#" target="_blank" rel="noopener">후원하기 ↗</a>
+    <span class="note">토스로 연결됩니다 · 정기결제 아님 · 계정 만들 필요 없음</span>
+  </div>
+</section>
 </div>
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel"><div class="top"><button class="close" id="close">×</button><div class="heb" id="p-heb"></div><div class="translit" id="p-translit"></div><div><span class="strong" id="p-strong"></span></div></div>
@@ -165,6 +207,57 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <div class="row"><div class="lab" id="p-deflab">상세 정의 (영문)</div><div class="def" id="p-def"></div></div>
 <div class="row"><div class="lab">성경 내 용례</div><div id="p-occ"></div></div></div>
 <div class="foot" id="p-foot"></div></aside>
+
+<!-- 처음 방문 시 뜨는 사용 가이드. 체크박스를 누르면 일주일 동안 안 뜬다. -->
+<div class="modal" id="guide" role="dialog" aria-modal="true" aria-labelledby="guide-h">
+<div class="sheet">
+  <button class="x" id="guide-x" aria-label="닫기">×</button>
+  <h2 id="guide-h">엠마오 원어대조성경</h2>
+  <div class="lead">개역한글 · KJV · 히브리어/헬라어 원문을 절 단위로 나란히 봅니다</div>
+  <ol>
+    <li><b>구약 / 신약</b> 탭을 고르고 책과 장을 선택하세요.
+      <span class="sub2">구약 히브리어는 오른쪽부터, 신약 헬라어는 왼쪽부터 읽습니다.</span></li>
+    <li>각 절 아래 원문 줄에서 <b>원어 낱말을 클릭</b>하세요.
+      <span class="sub2">음역 · 스트롱번호 · 품사 · 한국어 뜻과 상세 정의가 열립니다.</span></li>
+    <li><b>성경 내 용례</b>에서 책 이름을 누르면 그 책의 용례 구절이 펼쳐지고,
+      구절을 누르면 바로 그 본문으로 이동합니다.
+      <span class="sub2">한 낱말이 성경 전체에서 어떻게 쓰였는지 따라가며 볼 수 있습니다.</span></li>
+    <li><b>AI 요약</b>은 그 낱말이 지금 보는 책 안에서 지니는 의미를 정리한 글입니다.
+      <span class="sub2">참고 자료이며, 박스 아래에 AI가 작성했다는 사실을 늘 밝혀 둡니다.</span></li>
+  </ol>
+  <div class="give-in" id="guide-give" hidden>
+    광고 없이 무료로 운영합니다. AI API 비용과 서버 유지비에 보태 주실 분은
+    상단의 <b>♡ 후원</b> 버튼을 눌러 주세요. 의무가 아닙니다.
+  </div>
+  <div class="acts">
+    <label class="chk"><input type="checkbox" id="guide-hide">일주일 동안 보지 않기</label>
+    <button class="ok" id="guide-ok">시작하기</button>
+  </div>
+</div></div>
+
+<!-- 후원 안내 -->
+<div class="modal" id="give-modal" role="dialog" aria-modal="true" aria-labelledby="give-h">
+<div class="sheet">
+  <button class="x" id="give-x" aria-label="닫기">×</button>
+  <h2 id="give-h">후원으로 함께 만들어 주세요</h2>
+  <div class="lead">광고 없음 · 로그인 없음 · 모든 기능 무료</div>
+  <p style="font-size:14px;line-height:1.85;color:var(--ink2)">
+    이 사이트는 원문·사전·번역을 모두 퍼블릭도메인과 CC BY 자료로만 만들었습니다.
+    광고를 붙이지 않기로 한 것도 그래서입니다.<br><br>
+    다만 낱말별 <b>AI 요약</b>을 만드는 API 비용과 도메인·서버 유지비는 매달 실제로 나갑니다.
+    도움이 되셨다면 <span class="amt" style="color:var(--gold);font-weight:700">한 달에 2,000~5,000원</span>
+    정도를 자발적으로 보태 주세요. 부담 없는 만큼만, 원하실 때만 하시면 됩니다.<br><br>
+    <span style="font-size:12.5px;color:var(--muted)">
+    후원하지 않으셔도 모든 기능을 똑같이 쓰실 수 있고, 앞으로도 그렇습니다.</span>
+  </p>
+  <div class="acts" style="justify-content:center">
+    <a class="ok" id="give-link2" href="#" target="_blank" rel="noopener"
+       style="text-decoration:none;display:inline-block">토스로 후원하기 ↗</a>
+  </div>
+  <div class="lead" style="text-align:center;margin:12px 0 0">
+    토스 앱이 없어도 링크에서 계좌 이체로 보낼 수 있습니다 · 정기결제가 아닙니다
+  </div>
+</div></div>
 <script>
 let LEX={}, MANI=[], CUR=null, curBi=0, curTest='ot';
 const bookSel=document.getElementById('book'),chapSel=document.getElementById('chap'),text=document.getElementById('text');
@@ -435,5 +528,53 @@ document.getElementById('p-occ').addEventListener('click',e=>{
 document.getElementById('close').onclick=close;scrim.onclick=close;document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 bookSel.addEventListener('change',e=>loadBook(+e.target.value));
 chapSel.addEventListener('change',e=>render(+e.target.value));
+
+/* ── 후원 ──────────────────────────────────────────────────────────────
+   GIVE_URL 을 채우면 헤더의 ♡ 후원 버튼과 본문 하단 안내가 켜진다.
+   비어 있으면 관련 UI를 통째로 감추므로, 링크 없이 배포해도 깨지지 않는다.
+   토스 아이디는 토스 앱 → 전체 → 토스아이디 설정에서 만든다.
+     예) 'https://toss.me/emmaus' */
+const GIVE_URL='';
+if(GIVE_URL){
+  ['give-link','give-link2'].forEach(id=>document.getElementById(id).href=GIVE_URL);
+  ['give-btn','give-box','guide-give'].forEach(id=>document.getElementById(id).hidden=false);
+}
+
+/* ── 모달 ──────────────────────────────────────────────────────────────
+   가이드는 처음 방문 때 한 번 뜬다. '일주일 동안 보지 않기'를 켜고 닫으면
+   그때부터 7일간 뜨지 않는다. localStorage 를 못 쓰는 환경(사생활 보호 모드
+   등)에서는 조용히 매번 뜨는 쪽으로 물러난다 — 기능이 막히는 것보다 낫다. */
+const GUIDE_KEY='miqra.guide.hideUntil', WEEK=7*24*60*60*1000;
+const guide=document.getElementById('guide'), giveModal=document.getElementById('give-modal');
+function openModal(m){m.classList.add('on');document.body.style.overflow='hidden';}
+function closeModal(m){m.classList.remove('on');document.body.style.overflow='';}
+function closeGuide(){
+  if(document.getElementById('guide-hide').checked){
+    try{localStorage.setItem(GUIDE_KEY,String(Date.now()+WEEK));}catch(e){}
+  }
+  closeModal(guide);
+  trackEvent('guide_close',{hide_a_week:document.getElementById('guide-hide').checked});
+}
+function guideSuppressed(){
+  try{const t=+localStorage.getItem(GUIDE_KEY);return t&&Date.now()<t;}catch(e){return false;}
+}
+document.getElementById('guide-ok').onclick=closeGuide;
+document.getElementById('guide-x').onclick=closeGuide;
+guide.addEventListener('click',e=>{if(e.target===guide)closeGuide();});
+
+document.getElementById('give-btn').onclick=()=>{openModal(giveModal);trackEvent('give_open');};
+document.getElementById('give-x').onclick=()=>closeModal(giveModal);
+giveModal.addEventListener('click',e=>{if(e.target===giveModal)closeModal(giveModal);});
+document.getElementById('give-link').addEventListener('click',()=>trackEvent('give_click',{from:'footer'}));
+document.getElementById('give-link2').addEventListener('click',()=>trackEvent('give_click',{from:'modal'}));
+
+/* 낱말 패널이 열려 있으면 Esc 는 그쪽이 먼저 가져간다. 모달이 열려 있을 때만 여기서 처리 */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(giveModal.classList.contains('on'))closeModal(giveModal);
+  else if(guide.classList.contains('on'))closeGuide();
+});
+
+if(!guideSuppressed())openModal(guide);
 boot();
 </script></body></html>
