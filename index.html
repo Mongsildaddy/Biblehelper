@@ -107,8 +107,18 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .modal label.chk input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
 .modal .ok{background:var(--ink);color:var(--vellum);border:0;padding:9px 24px;border-radius:3px;font-family:inherit;font-size:14px;cursor:pointer}
 .modal .ok:hover{background:var(--gold);color:var(--ink)}
-/* ── 주석 ─────────────────────────────────────────────────────────────── */
-.modal .sheet.wide{width:760px}
+/* ── 주석 패널 ─────────────────────────────────────────────────────────
+   낱말 패널(오른쪽)과 짝을 이루는 왼쪽 패널. 본문과 나란히 읽도록 배경을
+   막지 않고, 넓은 화면에서는 본문을 오른쪽으로 밀어 겹치지 않게 한다. */
+.cpanel{position:fixed;top:0;left:0;height:100%;width:480px;max-width:94vw;background:var(--vellum);color:var(--ink);z-index:35;transform:translateX(-105%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:12px 0 40px rgba(0,0,0,.22);display:flex;flex-direction:column;border-right:2px solid var(--gold)}
+.cpanel.on{transform:none}
+.cpanel .chead{padding:16px 22px 12px;border-bottom:1px solid var(--line);position:relative;background:var(--vellum2)}
+.cpanel .chead h2{font-size:19px;margin:0 30px 0 0}
+.cpanel .x{position:absolute;top:10px;right:12px;background:0;border:0;color:var(--muted);font-size:26px;line-height:1;cursor:pointer}
+.cpanel .cbody{padding:18px 22px;overflow-y:auto;flex:1;overscroll-behavior:contain}
+.cpanel .comm-src{margin:3px 0 0}
+@media(min-width:1100px){body.comm-open .wrap{margin-left:calc(480px + 36px);margin-right:24px}}
+@media(max-width:900px){.cpanel{top:auto;bottom:0;height:64%;width:100%;max-width:100%;transform:translateY(105%);border-right:0;border-top:2px solid var(--gold);border-radius:14px 14px 0 0}.cpanel.on{transform:none}}
 .comm-src{font-size:12px;color:var(--muted);margin:-10px 0 14px}
 .comm-sub{background:var(--vellum2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:3px;padding:10px 13px;font-size:12.5px;color:var(--ink2);line-height:1.65;margin-bottom:16px}
 .comm-body{font-size:15px;line-height:1.9;color:var(--ink);white-space:pre-wrap;word-break:break-word}
@@ -259,16 +269,19 @@ function trackEvent(name,params){gtag('event',name,params||{});}
   </div>
 </div></div>
 
-<!-- 장별 주석 -->
-<div class="modal" id="comm" role="dialog" aria-modal="true" aria-labelledby="comm-h">
-<div class="sheet wide">
-  <button class="x" id="comm-x" aria-label="닫기">×</button>
-  <h2 id="comm-h">주석</h2>
-  <div class="comm-src" id="comm-src"></div>
-  <div id="comm-note"></div>
-  <div id="comm-out"></div>
-  <div class="comm-foot" id="comm-foot"></div>
-</div></div>
+<!-- 장별 주석: 왼쪽 패널. 본문과 나란히 읽는다 -->
+<aside class="cpanel" id="comm" aria-label="장별 주석">
+  <div class="chead">
+    <button class="x" id="comm-x" aria-label="닫기">×</button>
+    <h2 id="comm-h">주석</h2>
+    <div class="comm-src" id="comm-src"></div>
+  </div>
+  <div class="cbody" id="comm-scroll">
+    <div id="comm-note"></div>
+    <div id="comm-out"></div>
+    <div class="comm-foot" id="comm-foot"></div>
+  </div>
+</aside>
 
 <!-- 후원 안내 -->
 <div class="modal" id="give-modal" role="dialog" aria-modal="true" aria-labelledby="give-h">
@@ -649,6 +662,9 @@ buildGive();
 const COMM_TRIES = 9, COMM_KEY = 'miqra.comm.';
 const comm = document.getElementById('comm');
 let commBusy = false;
+/* 모달과 달리 배경 스크롤을 잠그지 않는다 — 본문과 나란히 읽는 패널이다 */
+function openCpanel(){comm.classList.add('on');document.body.classList.add('comm-open');}
+function closeCpanel(){comm.classList.remove('on');document.body.classList.remove('comm-open');}
 
 /* 이 장에 나오는 낱말의 영문뜻 → 한국어뜻. 우리가 정리한 개역한글 표기를
    번역에 그대로 쓰게 하려는 것이라, 고유명사(대문자로 시작)를 앞에 둔다. */
@@ -674,7 +690,8 @@ function renderComm(text){
 }
 
 async function openCommentary(){
-  if(commBusy)return;
+  /* 번역이 도는 중이면 패널만 다시 보여 준다 — 진행 상황이 그대로 보인다 */
+  if(commBusy){openCpanel();return;}
   const m=MANI[curBi], ch=+chapSel.value, osis=CUR.osis;
   const title=`${m.name} ${ch}장`;
   document.getElementById('comm-h').textContent=title+' 주석';
@@ -682,7 +699,8 @@ async function openCommentary(){
   document.getElementById('comm-note').innerHTML='';
   document.getElementById('comm-foot').innerHTML='';
   const out=document.getElementById('comm-out');
-  openModal(comm);
+  openCpanel();
+  document.getElementById('comm-scroll').scrollTop=0;
   trackEvent('commentary_open',{book:m.name,chapter:ch});
 
   const key=`${osis}.${ch}`;
@@ -772,13 +790,14 @@ async function openCommentary(){
 }
 
 document.getElementById('c-title').onclick=openCommentary;
-document.getElementById('comm-x').onclick=()=>{ if(!commBusy)closeModal(comm); };
-comm.addEventListener('click',e=>{ if(e.target===comm&&!commBusy)closeModal(comm); });
+/* 번역 중에도 닫을 수 있다. 조각은 서버에 저장되므로 닫아도 손해가 없고,
+   다시 열면 이어서 진행된다. */
+document.getElementById('comm-x').onclick=closeCpanel;
 
 /* 낱말 패널이 열려 있으면 Esc 는 그쪽이 먼저 가져간다. 모달이 열려 있을 때만 여기서 처리 */
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  if(comm.classList.contains('on')){ if(!commBusy)closeModal(comm); }
+  if(comm.classList.contains('on'))closeCpanel();
   else if(giveModal.classList.contains('on'))closeModal(giveModal);
   else if(guide.classList.contains('on'))closeGuide();
 });
