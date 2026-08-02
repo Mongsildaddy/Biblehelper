@@ -8,10 +8,10 @@ compatibility_date = "2025-01-01"
 ALLOWED_ORIGINS = "https://emmaustransbible.co.kr,https://www.emmaustransbible.co.kr,https://mongsildaddy.github.io"
 
 # 사용할 모델. 비워 두면 worker.js의 기본값을 쓴다.
-# MODEL = "claude-sonnet-4-5"
+MODEL = "claude-sonnet-5"
 
-# 결과 캐시(선택). 아래 주석을 풀고 id를 채우면 같은 요청은 다시 과금되지 않는다.
+# 결과 캐시. 같은 요청은 최초 1회만 과금되고 그 뒤로는 KV에서 바로 나온다.
 #   wrangler kv namespace create SUMCACHE
-# [[kv_namespaces]]
-# binding = "SUMCACHE"
-# id = "여기에_발급받은_id"
+[[kv_namespaces]]
+binding = "SUMCACHE"
+id = "4a8a33bdba194ae99e435de24a2abd23"

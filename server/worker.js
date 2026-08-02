@@ -1,23 +1,59 @@
 /**
- * 미크라 — AI 요약 프록시 (Cloudflare Worker)
+ * 엠마오 원어대조성경 — AI 중계 서버 (Cloudflare Worker)
  *
  * 정적 페이지에서 직접 Claude API를 부르면 API 키가 소스에 노출된다.
  * 이 Worker가 키를 대신 보관하고, 허용된 도메인의 요청만 중계한다.
+ *
+ * 경로
+ *   POST /             낱말×책 AI 요약   (기존)
+ *   POST /commentary   장별 주석 번역     (아담 클라크 등 퍼블릭도메인 주석)
  *
  * 필요한 설정 (server/README.md 참고)
  *   시크릿  ANTHROPIC_API_KEY   Anthropic 콘솔에서 발급한 키
  *   변수    ALLOWED_ORIGINS     쉼표로 구분한 허용 도메인
  *   변수    MODEL               (선택) 사용할 모델 이름
- *   KV      SUMCACHE            (선택) 결과 캐시. 붙이면 같은 요청은 과금되지 않는다.
+ *   KV      SUMCACHE            결과 캐시. 같은 요청은 최초 1회만 과금된다.
  */
 
 const MAX_VERSES = 60;
-const DEFAULT_MODEL = 'claude-sonnet-4-5';
+const DEFAULT_MODEL = 'claude-sonnet-5';
+
+/* 주석 원문 출처. 모두 퍼블릭도메인(CC0)이며 장 단위 JSON으로 제공된다. */
+const COMMENTARY_API = 'https://bible.helloao.org/api/c';
+const COMMENTARIES = {
+  'adam-clarke': '아담 클라크 주석',
+  'matthew-henry': '매튜 헨리 주석',
+  'jamieson-fausset-brown': '제이미슨-파우셋-브라운 주석',
+  'john-gill': '존 길 주석',
+  'keil-delitzsch': '카일-델리취 구약주석'
+};
+
+/* 우리 매니페스트의 OSIS 코드 → 주석 API의 3글자 책 코드.
+   아가(Song)는 어느 주석에도 없어서 의도적으로 빠져 있다. */
+const OSIS2API = {
+  Gen:'GEN', Exod:'EXO', Lev:'LEV', Num:'NUM', Deut:'DEU', Josh:'JOS', Judg:'JDG',
+  Ruth:'RUT', '1Sam':'1SA', '2Sam':'2SA', '1Kgs':'1KI', '2Kgs':'2KI', '1Chr':'1CH',
+  '2Chr':'2CH', Ezra:'EZR', Neh:'NEH', Esth:'EST', Job:'JOB', Ps:'PSA', Prov:'PRO',
+  Eccl:'ECC', Isa:'ISA', Jer:'JER', Lam:'LAM', Ezek:'EZK', Dan:'DAN', Hos:'HOS',
+  Joel:'JOL', Amos:'AMO', Obad:'OBA', Jonah:'JON', Mic:'MIC', Nah:'NAM', Hab:'HAB',
+  Zeph:'ZEP', Hag:'HAG', Zech:'ZEC', Mal:'MAL', Matt:'MAT', Mark:'MRK', Luke:'LUK',
+  John:'JHN', Acts:'ACT', Rom:'ROM', '1Cor':'1CO', '2Cor':'2CO', Gal:'GAL', Eph:'EPH',
+  Phil:'PHP', Col:'COL', '1Thess':'1TH', '2Thess':'2TH', '1Tim':'1TI', '2Tim':'2TI',
+  Titus:'TIT', Phlm:'PHM', Heb:'HEB', Jas:'JAS', '1Pet':'1PE', '2Pet':'2PE',
+  '1John':'1JN', '2John':'2JN', '3John':'3JN', Jude:'JUD', Rev:'REV'
+};
+
+/* 한 번에 번역할 원문 길이. 장 전체를 한 요청에 밀어넣으면 응답이 길어져
+   타임아웃 위험이 커지므로 나눠서 부르고 이어 붙인다. */
+const CHUNK_CHARS = 9000;
+const MAX_CHUNKS = 14;          /* 아주 긴 장(로마서 8장 ~102KB)도 덮는다 */
+const MAX_GLOSSARY = 220;
 
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     const cors = corsHeaders(origin, env);
+    const path = new URL(request.url).pathname.replace(/\/+$/, '') || '/';
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (request.method !== 'POST') return json({ error: 'POST만 허용됩니다.' }, 405, cors);
@@ -27,30 +63,151 @@ export default {
     let body;
     try { body = await request.json(); } catch { return json({ error: '잘못된 요청 형식입니다.' }, 400, cors); }
 
-    const strong = String(body.strong || '').trim();
-    const book = String(body.book || '').trim();
-    const verses = Array.isArray(body.verses) ? body.verses.slice(0, MAX_VERSES) : [];
-    if (!/^[GH]\d{4}[a-z]?$/.test(strong)) return json({ error: '스트롱번호가 올바르지 않습니다.' }, 400, cors);
-    if (!book || !verses.length) return json({ error: '요약할 구절이 없습니다.' }, 400, cors);
-
-    const cacheKey = `${strong}|${book}`;
-    if (env.SUMCACHE) {
-      const hit = await env.SUMCACHE.get(cacheKey);
-      if (hit) return json({ summary: hit, cached: true }, 200, cors);
-    }
-
-    let summary;
     try {
-      summary = await callClaude(env, body, strong, book, verses);
+      if (path === '/commentary') return await handleCommentary(env, body, cors);
+      return await handleSummary(env, body, cors);
     } catch (e) {
       return json({ error: String(e.message || e) }, 502, cors);
     }
-    if (!summary) return json({ error: '요약이 생성되지 않았습니다.' }, 502, cors);
-
-    if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, summary);
-    return json({ summary }, 200, cors);
   }
 };
+
+/* ── 낱말×책 AI 요약 ──────────────────────────────────────────────────── */
+
+async function handleSummary(env, body, cors) {
+  const strong = String(body.strong || '').trim();
+  const book = String(body.book || '').trim();
+  const verses = Array.isArray(body.verses) ? body.verses.slice(0, MAX_VERSES) : [];
+  if (!/^[GH]\d{4}[a-z]?$/.test(strong)) return json({ error: '스트롱번호가 올바르지 않습니다.' }, 400, cors);
+  if (!book || !verses.length) return json({ error: '요약할 구절이 없습니다.' }, 400, cors);
+
+  const cacheKey = `${strong}|${book}`;
+  if (env.SUMCACHE) {
+    const hit = await env.SUMCACHE.get(cacheKey);
+    if (hit) return json({ summary: hit, cached: true }, 200, cors);
+  }
+
+  const summary = await callClaude(env, body, strong, book, verses);
+  if (!summary) return json({ error: '요약이 생성되지 않았습니다.' }, 502, cors);
+
+  if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, summary);
+  return json({ summary }, 200, cors);
+}
+
+/* ── 장별 주석 번역 ───────────────────────────────────────────────────── */
+
+async function handleCommentary(env, body, cors) {
+  const osis = String(body.osis || '').trim();
+  const chapter = parseInt(body.chapter, 10);
+  const id = String(body.commentary || 'adam-clarke').trim();
+
+  if (!COMMENTARIES[id]) return json({ error: '알 수 없는 주석입니다.' }, 400, cors);
+  const code = OSIS2API[osis];
+  if (!code) return json({ error: '이 책은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
+  if (!(chapter >= 1 && chapter <= 150)) return json({ error: '장 번호가 올바르지 않습니다.' }, 400, cors);
+
+  const cacheKey = `c:${id}:${osis}.${chapter}`;
+  if (env.SUMCACHE) {
+    const hit = await env.SUMCACHE.get(cacheKey);
+    if (hit) return json({ text: hit, commentary: COMMENTARIES[id], cached: true }, 200, cors);
+  }
+
+  /* 1. 퍼블릭도메인 주석 원문을 가져온다 */
+  const src = await fetch(`${COMMENTARY_API}/${id}/${code}/${chapter}.json`);
+  if (src.status === 404) return json({ error: '이 장은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
+  if (!src.ok) throw new Error(`주석 원문을 가져오지 못했습니다 (${src.status})`);
+  const doc = await src.json();
+
+  const blocks = flattenCommentary(doc);
+  if (!blocks.length) return json({ error: '이 장은 주석 내용이 비어 있습니다.', unavailable: true }, 404, cors);
+
+  /* 2. 고유명사 용어집. 클라이언트가 그 장에 나오는 낱말의 영문뜻→한국어뜻을
+        보내 준다. 우리가 정리한 개역한글 표기를 그대로 쓰기 위한 것. */
+  const glossary = buildGlossary(body.glossary);
+
+  /* 3. 길면 나눠서 번역하고 이어 붙인다 */
+  const chunks = chunkBlocks(blocks, CHUNK_CHARS).slice(0, MAX_CHUNKS);
+  const out = [];
+  for (let i = 0; i < chunks.length; i++) {
+    out.push(await translateChunk(env, {
+      text: chunks[i], glossary, ref: `${osis} ${chapter}장`,
+      name: COMMENTARIES[id], part: i + 1, total: chunks.length
+    }));
+  }
+  const text = out.join('\n\n').trim();
+  if (!text) return json({ error: '번역이 생성되지 않았습니다.' }, 502, cors);
+
+  if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, text);
+  return json({ text, commentary: COMMENTARIES[id] }, 200, cors);
+}
+
+/* 주석 JSON은 {chapter:{introduction, content:[{type:'verse',number,content:[...]}]}} 꼴.
+   절 번호를 살려 둬야 번역문에서도 어느 절 주석인지 알 수 있다. */
+function flattenCommentary(doc) {
+  const ch = doc.chapter || {};
+  const out = [];
+  const intro = String(ch.introduction || doc.introduction || '').trim();
+  if (intro) out.push({ label: '서론', text: intro });
+  for (const item of ch.content || []) {
+    const text = (Array.isArray(item.content) ? item.content : [item.content])
+      .map(c => (typeof c === 'string' ? c : (c && c.text) || '')).join('\n').trim();
+    if (text) out.push({ label: item.number ? `${item.number}절` : '', text });
+  }
+  return out;
+}
+
+function chunkBlocks(blocks, limit) {
+  const chunks = [];
+  let cur = '', len = 0;
+  for (const b of blocks) {
+    const piece = (b.label ? `[${b.label}]\n` : '') + b.text;
+    /* 한 절 주석 자체가 한도를 넘으면 그것만 따로 보낸다 */
+    if (len && len + piece.length > limit) { chunks.push(cur); cur = ''; len = 0; }
+    cur += (cur ? '\n\n' : '') + piece;
+    len += piece.length;
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+function buildGlossary(raw) {
+  if (!raw || typeof raw !== 'object') return '';
+  const pairs = [];
+  for (const [en, ko] of Object.entries(raw)) {
+    if (pairs.length >= MAX_GLOSSARY) break;
+    const e = String(en).trim(), k = String(ko).trim();
+    if (e && k && e.length < 40 && k.length < 40) pairs.push(`${e} = ${k}`);
+  }
+  return pairs.join('\n');
+}
+
+async function translateChunk(env, o) {
+  const gloss = o.glossary
+    ? `\n\n고유명사·용어 표기 (반드시 이 표기를 그대로 쓰세요)\n${o.glossary}`
+    : '';
+  const part = o.total > 1 ? `\n(이 장의 ${o.total}부분 중 ${o.part}번째입니다. 앞뒤 인사말 없이 본문만 이어서 옮기세요.)` : '';
+
+  const prompt = `아래는 «${o.name}»의 ${o.ref} 주석 원문(영어)입니다. 한국어로 옮겨 주세요.${part}
+
+번역 지침
+- 설교를 준비하는 목회자가 읽습니다. 존댓말로, 학술적이되 읽기 쉽게 옮깁니다.
+- 원문의 내용을 빠뜨리거나 요약하지 말고 그대로 옮깁니다. 다만 19세기 영어의
+  장황한 문장은 한국어로 자연스럽게 끊어 씁니다.
+- 성경 인명·지명은 개역한글 표기를 따릅니다. 아래 용어집이 있으면 그 표기를 우선합니다.
+- 히브리어·헬라어 원어가 나오면 원문 그대로 두고, 필요하면 옆에 음역을 괄호로 답니다.
+- 성경 구절 인용은 «창세기 1:3» 같은 한국어 책 이름으로 옮깁니다.
+- [3절] 같은 절 표시는 그대로 유지합니다.
+- 저자가 참조한 라틴어·랍비 문헌 이름은 원어를 남기고 필요하면 짧게 풀이합니다.
+- 머리말이나 맺음말, 번역자 주를 덧붙이지 않습니다. 마크다운 기호는 쓰지 않습니다.${gloss}
+
+--- 원문 시작 ---
+${o.text}
+--- 원문 끝 ---`;
+
+  return await anthropic(env, prompt, 16000);
+}
+
+/* ── 공통 ─────────────────────────────────────────────────────────────── */
 
 function corsHeaders(origin, env) {
   const list = String(env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -69,6 +226,28 @@ function json(obj, status, headers) {
     status,
     headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' }
   });
+}
+
+async function anthropic(env, prompt, maxTokens) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: env.MODEL || DEFAULT_MODEL,
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Anthropic API ${res.status} ${t.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
 }
 
 async function callClaude(env, body, strong, book, verses) {
@@ -98,24 +277,5 @@ ${lines}
 - 교파적 교리 판단은 피하고, 본문에서 관찰되는 쓰임만 기술합니다.
 - 머리말이나 맺음말 없이 요약 본문만 출력합니다. 마크다운 기호는 쓰지 않습니다.`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: env.MODEL || DEFAULT_MODEL,
-      max_tokens: 900,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Anthropic API ${res.status} ${t.slice(0, 200)}`);
-  }
-  const data = await res.json();
-  return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+  return await anthropic(env, prompt, 900);
 }
