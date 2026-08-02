@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# 데이터 파일은 크롤링해도 얻을 게 없어 크롤링 예산만 낭비한다
+Disallow: /books/
+Disallow: /tools/
+Disallow: /server/
+
+Sitemap: https://emmaustransbible.co.kr/sitemap.xml
