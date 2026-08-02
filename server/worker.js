@@ -159,22 +159,27 @@ async function handleCommentary(env, body, cors) {
   const osis = String(body.osis || '').trim();
   const chapter = parseInt(body.chapter, 10);
   const id = String(body.commentary || 'adam-clarke').trim();
+  /* 조각 번호. 긴 장을 한 요청에 다 번역하면 Cloudflare 가 100초쯤에 연결을
+     끊는다. 클라이언트가 조각을 하나씩 요청하고, 조각마다 KV에 저장하므로
+     실패해도 이미 번역된 조각은 다시 과금되지 않는다. */
+  const part = Math.max(1, parseInt(body.part, 10) || 1);
 
   if (!COMMENTARIES[id]) return json({ error: '알 수 없는 주석입니다.' }, 400, cors);
   const code = OSIS2API[osis];
   if (!code) return json({ error: '이 책은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
   if (!(chapter >= 1 && chapter <= 150)) return json({ error: '장 번호가 올바르지 않습니다.' }, 400, cors);
 
-  const cacheKey = `c:${id}:${osis}.${chapter}`;
+  /* 완성본이 있으면 바로 준다 */
+  const fullKey = `c:${id}:${osis}.${chapter}`;
   if (env.SUMCACHE) {
-    const hit = await env.SUMCACHE.get(cacheKey);
+    const hit = await env.SUMCACHE.get(fullKey);
     if (hit) {
-      try { return json({ ...JSON.parse(hit), cached: true }, 200, cors); }
-      catch { /* 옛 형식(본문만 저장) 캐시는 아래로 흘려보낸다 */ }
+      try { const d = JSON.parse(hit); if (d.text) return json({ ...d, done: true, cached: true }, 200, cors); }
+      catch { /* 옛 형식이면 무시하고 새로 만든다 */ }
     }
   }
 
-  /* 1. 퍼블릭도메인 주석 원문을 가져온다. 없는 책이면 대체 주석으로 넘어간다. */
+  /* 원문 확보 (없는 책이면 대체 주석으로) */
   let used = id, blocks = null;
   for (const cand of [id, ...(FALLBACK[id] || [])]) {
     const doc = await fetchCommentary(cand, code, chapter);
@@ -184,26 +189,48 @@ async function handleCommentary(env, body, cors) {
   }
   if (!blocks) return json({ error: '이 장은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
 
-  /* 2. 고유명사 용어집. 클라이언트가 그 장에 나오는 낱말의 영문뜻→한국어뜻을
-        보내 준다. 우리가 정리한 개역한글 표기를 그대로 쓰기 위한 것. */
-  const glossary = buildGlossary(body.glossary);
-
-  /* 3. 길면 나눠서 번역하고 이어 붙인다 */
   const chunks = chunkBlocks(blocks, CHUNK_CHARS).slice(0, MAX_CHUNKS);
-  const out = [];
-  for (let i = 0; i < chunks.length; i++) {
-    out.push(await translateChunk(env, {
-      text: chunks[i], glossary, ref: `${osis} ${chapter}장`,
-      name: COMMENTARIES[used], part: i + 1, total: chunks.length
-    }));
-  }
-  const text = out.join('\n\n').trim();
-  if (!text) return json({ error: '번역이 생성되지 않았습니다.' }, 502, cors);
+  const total = chunks.length;
+  if (part > total) return json({ error: '조각 번호가 범위를 벗어났습니다.', total }, 400, cors);
 
-  /* 어느 주석을 실제로 썼는지도 함께 캐시한다 */
-  const payload = { text, commentary: COMMENTARIES[used], id: used, substituted: used !== id };
-  if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, JSON.stringify(payload));
-  return json(payload, 200, cors);
+  /* 이 조각이 이미 번역돼 있으면 그대로 반환 — 재시도해도 비용이 들지 않는다 */
+  const partKey = `${fullKey}#p${part}.${used}`;
+  let piece = env.SUMCACHE ? await env.SUMCACHE.get(partKey) : null;
+  let pieceCached = !!piece;
+  if (!piece) {
+    piece = await translateChunk(env, {
+      text: chunks[part - 1], glossary: buildGlossary(body.glossary),
+      ref: `${osis} ${chapter}장`, name: COMMENTARIES[used], part, total
+    });
+    if (!piece) return json({ error: '번역이 생성되지 않았습니다.' }, 502, cors);
+    if (env.SUMCACHE) await env.SUMCACHE.put(partKey, piece);
+  }
+
+  /* 마지막 조각까지 모이면 완성본을 저장해 다음부터는 즉시 나온다 */
+  let done = false;
+  if (env.SUMCACHE && part === total) {
+    const all = [piece];
+    let ok = true;
+    for (let i = 1; i < total; i++) {
+      const q = await env.SUMCACHE.get(`${fullKey}#p${i}.${used}`);
+      if (!q) { ok = false; break; }
+      all[i - 1] = q;
+    }
+    all[total - 1] = piece;
+    if (ok) {
+      await env.SUMCACHE.put(fullKey, JSON.stringify({
+        text: all.join('\n\n').trim(),
+        commentary: COMMENTARIES[used], id: used, substituted: used !== id
+      }));
+      done = true;
+    }
+  }
+
+  return json({
+    part, total, text: piece, done,
+    commentary: COMMENTARIES[used], id: used,
+    substituted: used !== id, partCached: pieceCached
+  }, 200, cors);
 }
 
 /* helloao는 없는 장에도 HTTP 200 + HTML(SPA 폴백)을 돌려준다.

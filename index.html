@@ -696,45 +696,66 @@ async function openCommentary(){
 
   commBusy=true;
   const glossary=chapterGlossary(ch);
-  for(let t=1;t<=COMM_TRIES;t++){
-    out.innerHTML=`<div class="comm-wait"><div class="dot"></div><br>
-      ${esc(title)} 주석을 한국어로 옮기는 중입니다.<br>
-      처음 여는 장은 1~2분쯤 걸리고, 다음부터는 바로 열립니다.
-      ${t>1?`<div class="tries">연결을 다시 시도하는 중… (${t}/${COMM_TRIES})</div>`:''}</div>`;
-    let r,d;
-    try{
-      r=await fetch(SUMAPI+'/commentary',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({osis,chapter:ch,commentary:'adam-clarke',glossary})
-      });
-      d=await r.json();
-    }catch(e){ d={error:String(e),retryable:true}; }
 
-    if(r&&r.ok&&d.text){
-      commBusy=false;
-      commCacheSet(key,JSON.stringify(d));
-      trackEvent('commentary_done',{book:m.name,chapter:ch,tries:t,used:d.id||''});
-      return paint(d);
+  /* 긴 장을 한 요청에 다 번역시키면 Cloudflare 가 100초쯤에 연결을 끊고,
+     그때마다 번역이 처음부터 다시 돌아 비용이 이중으로 나간다. 그래서 조각을
+     하나씩 요청한다. 서버가 조각마다 저장하므로 실패 후 다시 걸어도 이미
+     번역된 조각은 과금 없이 즉시 돌아온다. */
+  let total=1, meta=null;
+  const parts=[];
+  for(let part=1; part<=total; part++){
+    let got=null;
+    for(let t=1; t<=COMM_TRIES && !got; t++){
+      const prog = total>1 ? `${part}/${total} 부분` : '주석';
+      out.innerHTML=`<div class="comm-wait"><div class="dot"></div><br>
+        ${esc(title)} ${prog}을 한국어로 옮기는 중입니다.<br>
+        처음 여는 장만 시간이 걸리고, 다음부터는 바로 열립니다.
+        ${t>1?`<div class="tries">연결을 다시 시도하는 중… (${t}/${COMM_TRIES})</div>`:''}</div>`;
+      let r,d;
+      try{
+        r=await fetch(SUMAPI+'/commentary',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({osis,chapter:ch,commentary:'adam-clarke',part,glossary})
+        });
+        d=await r.json();
+      }catch(e){ d={error:String(e),retryable:true}; }
+
+      if(r&&r.ok&&d.text!==undefined){
+        got=d; total=d.total||1; meta=d;
+        parts[(d.part||part)-1]=d.text;
+        if(d.done&&d.cached){ commBusy=false; commCacheSet(key,JSON.stringify(d)); return paint(d); }
+        break;
+      }
+      if(d&&d.unavailable){
+        commBusy=false;
+        out.innerHTML=`<div class="comm-wait">이 장은 공개된 주석이 없습니다.<br>
+          <span style="font-size:12.5px">퍼블릭도메인으로 풀린 주석에 이 본문이 빠져 있습니다.</span></div>`;
+        return;
+      }
+      if(d&&d.error&&!d.retryable&&!(r&&r.status>=500)){
+        commBusy=false;
+        out.innerHTML=`<div class="comm-wait">주석을 불러오지 못했습니다.<br>
+          <span style="font-size:12.5px">${esc(String(d.error).slice(0,160))}</span></div>`;
+        return;
+      }
+      await new Promise(s=>setTimeout(s,600));
     }
-    if(d&&d.unavailable){
+    if(!got){
       commBusy=false;
-      out.innerHTML=`<div class="comm-wait">이 장은 공개된 주석이 없습니다.<br>
-        <span style="font-size:12.5px">퍼블릭도메인으로 풀린 주석에 이 본문이 빠져 있습니다.</span></div>`;
+      out.innerHTML=`<div class="comm-wait">지금은 연결이 원활하지 않습니다.<br>
+        잠시 뒤 다시 눌러 주세요.<br>
+        <span style="font-size:12.5px">이미 번역된 부분은 저장되어 있어, 다음에는 이어서 진행됩니다.</span></div>`;
+      trackEvent('commentary_fail',{book:m.name,chapter:ch,part});
       return;
     }
-    /* 재시도 대상이 아니면 더 걸어 봐야 소용없다 */
-    if(d&&d.error&&!d.retryable&&!(r&&r.status>=500)){
-      commBusy=false;
-      out.innerHTML=`<div class="comm-wait">주석을 불러오지 못했습니다.<br>
-        <span style="font-size:12.5px">${esc(String(d.error).slice(0,160))}</span></div>`;
-      return;
-    }
-    await new Promise(s=>setTimeout(s,600));
   }
+
   commBusy=false;
-  out.innerHTML=`<div class="comm-wait">지금은 연결이 원활하지 않습니다.<br>
-    잠시 뒤 다시 눌러 주세요.<br>
-    <span style="font-size:12.5px">이미 번역된 장은 즉시 열립니다.</span></div>`;
+  const full={ text:parts.join('\n\n').trim(), commentary:meta.commentary,
+               id:meta.id, substituted:meta.substituted };
+  commCacheSet(key,JSON.stringify(full));
+  trackEvent('commentary_done',{book:m.name,chapter:ch,parts:total,used:meta.id||''});
+  return paint(full);
 
   function paint(d){
     commBusy=false;
