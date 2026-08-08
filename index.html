@@ -1,29 +1,37 @@
 <!DOCTYPE html><html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>엠마오 원어대조성경</title>
-<meta name="description" content="개역한글·KJV와 히브리어(BHS)·헬라어(SBLGNT) 원문을 절 단위로 대조합니다. 원어 단어를 누르면 스트롱번호·품사·뜻과 성경 전체 용례를 볼 수 있습니다.">
+<title>엠마오 원어대조성경 | 히브리어·헬라어 원문 성경 대조</title>
+<meta name="description" content="히브리어·헬라어 원문 성경을 개역한글·KJV와 절 단위로 나란히 보는 무료 원어대조성경입니다. 원어 낱말을 누르면 스트롱번호·품사·뜻과 성경 전체 용례가 열리고, 장마다 퍼블릭도메인 주석을 한국어로 볼 수 있습니다.">
 <meta name="keywords" content="원어성경,히브리어 성경,헬라어 성경,원어대조성경,스트롱번호,BHS,SBLGNT,개역한글,성경 원문,엠마오">
 <meta name="author" content="엠마오 원어대조성경">
 <link rel="canonical" href="https://emmaustransbible.co.kr/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="엠마오 원어대조성경">
-<meta property="og:title" content="엠마오 원어대조성경 — 히브리어·헬라어 원문 대조">
-<meta property="og:description" content="개역한글·KJV와 원문을 절 단위로 나란히. 원어 낱말을 누르면 스트롱번호·뜻·성경 전체 용례를 봅니다.">
+<meta property="og:title" content="엠마오 원어대조성경 | 히브리어·헬라어 원문 성경 대조">
+<meta property="og:description" content="히브리어·헬라어 원문 성경을 개역한글·KJV와 절 단위로 나란히 보는 무료 원어대조성경. 스트롱번호·용례·주석까지 한 화면에서.">
 <meta property="og:url" content="https://emmaustransbible.co.kr/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="엠마오 원어대조성경">
-<meta name="twitter:description" content="개역한글·KJV와 히브리어·헬라어 원문을 절 단위로 대조하는 성경 원어 도구.">
+<meta name="twitter:description" content="히브리어·헬라어 원문 성경을 개역한글·KJV와 절 단위로 대조하는 무료 도구.">
 <!-- 검색엔진 소유확인용. 등록하면 발급받은 값으로 채운다. 값이 비면 태그째 지울 것.
 <meta name="google-site-verification" content="">
 <meta name="naver-site-verification" content="">
 -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite",
-"name":"엠마오 원어대조성경","alternateName":["엠마오 원어성경","Emmaus 원어대조성경"],
+{"@context":"https://schema.org","@type":"WebApplication",
+"name":"엠마오 원어대조성경",
+"alternateName":["엠마오 원어성경","원어대조성경","Emmaus 원어대조성경"],
 "url":"https://emmaustransbible.co.kr/",
 "inLanguage":"ko",
-"description":"개역한글·KJV와 히브리어(BHS)·헬라어(SBLGNT) 원문을 절 단위로 대조하는 성경 원어 학습 도구."}
+"applicationCategory":"ReferenceApplication",
+"browserRequirements":"자바스크립트를 지원하는 최신 브라우저",
+"operatingSystem":"All",
+"isAccessibleForFree":true,
+"offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},
+"description":"히브리어 성경(BHS)과 헬라어 성경(SBLGNT) 원문을 개역한글·KJV와 절 단위로 대조하는 무료 원어대조성경. 스트롱번호·품사·뜻과 성경 전체 용례, 퍼블릭도메인 주석 한국어 번역을 제공합니다.",
+"featureList":["히브리어 원문 대조","헬라어 원문 대조","스트롱번호 사전","성경 전체 용례 색인","퍼블릭도메인 주석 한국어 번역","낱말별 AI 요약"],
+"about":[{"@type":"Thing","name":"히브리어 성경"},{"@type":"Thing","name":"헬라어 성경"},{"@type":"Thing","name":"성경 원어"}]}
 </script>
 <style>
 :root{--ink:#20243a;--ink2:#3a3f57;--vellum:#f5efe1;--vellum2:#efe7d4;--gold:#9c7a1e;--gold-lite:#c6a548;--muted:#7a7161;--line:#ddd2b8;--card:#1c2036;--card-ink:#ece3cf;--pending:#b9a98a}
@@ -41,10 +49,10 @@ header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--vellum
 select{background:var(--ink2);color:var(--vellum);border:1px solid #4a4f6a;border-radius:2px;padding:7px 10px;font-family:inherit;font-size:14px;cursor:pointer}
 select.book{min-width:118px}select.chap{min-width:76px}
 .chap{padding:34px 0 8px;text-align:center;border-bottom:1px solid var(--line);margin-bottom:4px}
-.chap .bk{font-size:13px;letter-spacing:.28em;color:var(--gold)}.chap h1{font-size:32px;margin:6px 0 4px}
+.chap .bk{font-size:13px;letter-spacing:.28em;color:var(--gold)}.chap .ctitle{font-size:32px;margin:6px 0 4px;font-weight:700}
 /* 장 제목을 누르면 그 장의 주석이 열린다 */
-.chap h1 button{background:0;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;border-bottom:1px dashed var(--line)}
-.chap h1 button:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.chap .ctitle button{background:0;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;border-bottom:1px dashed var(--line)}
+.chap .ctitle button:hover{color:var(--gold);border-bottom-color:var(--gold)}
 .chap .cta{font-size:12px;color:var(--muted);margin-top:6px}
 .chap .sub{font-size:13px;color:var(--muted)}
 .cov{display:inline-block;margin-top:12px;font-size:12px;color:var(--muted);background:var(--vellum2);border:1px solid var(--line);border-radius:20px;padding:5px 14px}
@@ -78,6 +86,26 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .row .val{font-size:16px}.row .val.big{font-size:22px;font-weight:700;color:#fff}.row .def{font-size:14px;line-height:1.6;color:#d4d9ec;font-family:Georgia,serif}
 .pendbox{font-size:14px;color:#c3c9e0;padding:12px 14px;background:#232842;border-radius:4px;border-left:3px solid var(--gold)}.pendbox b{color:var(--gold-lite)}
 .panel .foot{padding:14px 24px;border-top:1px solid #363b57;font-size:11px;color:#6f7590;line-height:1.5}
+/* ── 사이트 소개 ───────────────────────────────────────────────────────
+   본문이 JS로 채워지는 구조라, 크롤러 눈에는 정적 산문이 후원 안내문뿐이었다.
+   그래서 검색 결과 설명에 엉뚱한 문구가 잡혔다. 사람에게도 쓸모 있는 소개를
+   HTML에 실어 둔다. */
+.intro{padding:22px 0 4px;border-bottom:1px solid var(--line)}
+.intro h1{font-size:17px;letter-spacing:.01em;margin-bottom:7px;font-weight:700}
+.intro p{font-size:13.5px;line-height:1.85;color:var(--ink2)}
+.about{margin:40px 0 0;padding:26px 0 0;border-top:1px solid var(--line)}
+.about h2{font-size:16px;margin-bottom:12px}
+.about h3{font-size:13.5px;color:var(--gold);margin:18px 0 5px;letter-spacing:.02em}
+.about p,.about li{font-size:13.5px;line-height:1.85;color:var(--ink2)}
+.about ul{margin:0 0 0 18px}
+.about li{margin-bottom:5px}
+.about .src{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.75}
+@media(max-width:560px){
+  .intro{padding:16px 0 2px}
+  .intro h1{font-size:15px;margin-bottom:5px;line-height:1.45}
+  .intro p{font-size:12.5px;line-height:1.7}
+  .about h3{margin-top:15px}
+}
 .hint{text-align:center;color:var(--muted);font-size:13px;padding:18px 0 0}
 /* ── 후원 ─────────────────────────────────────────────────────────────── */
 .give-btn{background:transparent;color:var(--gold-lite);border:1px solid #6d6144;padding:6px 12px;border-radius:3px;font-family:inherit;font-size:12px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
@@ -169,7 +197,7 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .minibtn:hover{border-color:var(--gold-lite);color:var(--gold-lite)}
 .verse.hl{background:#fff6d8;box-shadow:0 0 0 8px #fff6d8;border-radius:2px;transition:background 1s,box-shadow 1s}
 .chip.hl{background:#ffeaa0;border-bottom-color:var(--gold)}
-@media(max-width:560px){.panel{width:100%;max-width:100%;top:auto;bottom:0;height:82%;transform:translateY(100%);border-radius:14px 14px 0 0}.panel.on{transform:translateY(0)}.chap h1{font-size:26px}.kor{font-size:18px}}
+@media(max-width:560px){.panel{width:100%;max-width:100%;top:auto;bottom:0;height:82%;transform:translateY(100%);border-radius:14px 14px 0 0}.panel.on{transform:translateY(0)}.chap .ctitle{font-size:26px}.kor{font-size:18px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <!-- ── Google Analytics 4 ──────────────────────────────────────────────────
@@ -216,12 +244,51 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <select id="book" class="book"></select><select id="chap" class="chap"></select>
 <button class="give-btn" id="give-btn" hidden>♡ 후원</button></div></div></header>
 <div class="wrap">
+<section class="intro">
+  <h1>엠마오 원어대조성경 — 히브리어·헬라어 원문 성경 대조</h1>
+  <p>구약 히브리어 성경(BHS)과 신약 헬라어 성경(SBLGNT) 원문을 개역한글·KJV와
+  절 단위로 나란히 읽습니다. 원어 낱말을 누르면 스트롱번호와 품사, 뜻, 그리고
+  그 낱말이 성경 전체에서 쓰인 모든 구절을 볼 수 있습니다. 회원가입도 광고도
+  없이 무료입니다.</p>
+</section>
 <div class="chap"><div class="bk" id="c-bk"></div>
-<h1><button id="c-title" type="button" title="이 장의 주석 보기"></button></h1>
+<h2 class="ctitle"><button id="c-title" type="button" title="이 장의 주석 보기"></button></h2>
 <div class="sub" id="c-sub"></div><div class="cov" id="c-cov"></div>
 <div class="cta" id="c-cta" hidden>↑ 장 제목을 누르면 이 장의 주석을 볼 수 있습니다</div></div>
 <div id="text"><div class="loading"><div class="big">Ἐμμαοῦς</div>불러오는 중…</div></div>
 <div class="hint">↑ 원어 단어를 누르면 뜻 · 품사와 함께 <b>그 단어가 쓰인 성경의 모든 구절</b>이 열립니다 (구절을 누르면 이동)</div>
+<section class="about">
+  <h2>이 사이트에 대하여</h2>
+  <p>설교를 준비하는 목회자와 성경을 깊이 읽으려는 성도를 위해 만든 원어 성경
+  대조 도구입니다. 신구약 66권 전체의 원문을 담았습니다.</p>
+
+  <h3>히브리어 성경 (구약)</h3>
+  <p>비블리아 헤브라이카 슈투트가르텐시아(BHS) 본문을 OpenScriptures OSHB
+  태깅과 함께 싣습니다. 오른쪽에서 왼쪽으로 읽는 히브리어 본문을 그대로 보여
+  주고, 낱말마다 스트롱번호·음역·형태소 분석·한국어 뜻이 붙습니다.</p>
+
+  <h3>헬라어 성경 (신약)</h3>
+  <p>SBL 그리스어 신약(SBLGNT) 본문에 STEPBible TAGNT 태깅을 붙였습니다.
+  헬라어는 왼쪽에서 오른쪽으로 표시하며, 구약과 같은 방식으로 낱말을 눌러
+  뜻과 용례를 확인할 수 있습니다.</p>
+
+  <h3>할 수 있는 일</h3>
+  <ul>
+    <li>개역한글·KJV·원문을 한 절씩 나란히 비교</li>
+    <li>원어 낱말의 스트롱번호·품사·뜻과 상세 사전 정의 확인</li>
+    <li>한 낱말이 성경 전체 어디에 나오는지 찾아 그 구절로 바로 이동</li>
+    <li>장 제목을 눌러 그 장의 주석을 한국어로 읽기</li>
+    <li>낱말이 특정 책 안에서 어떤 의미로 쓰였는지 정리한 AI 요약 보기</li>
+  </ul>
+
+  <div class="src">
+    본문·사전은 모두 퍼블릭도메인 또는 CC BY 자료입니다.
+    히브리어 BHS/OSHB·헬라어 SBLGNT (CC BY 4.0) · 상세정의 Brown-Driver-Briggs(1906)
+    · Strong&#39;s(1890) · Abbott-Smith(1922) · 개역한글(2012년 저작권 만료) · KJV.
+    주석은 아담 클라크·존 길 등 퍼블릭도메인 주석을 한국어로 옮겨 보여 줍니다.
+  </div>
+</section>
+
 <section class="give" id="give-box" hidden>
   <h3>이 도구는 후원으로 유지됩니다</h3>
   <p>엠마오 원어대조성경은 광고 없이, 로그인 없이, 누구나 무료로 씁니다.
