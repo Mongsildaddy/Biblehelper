@@ -10,6 +10,13 @@ ALLOWED_ORIGINS = "https://emmaustransbible.co.kr,https://www.emmaustransbible.c
 # 사용할 모델. 비워 두면 worker.js의 기본값을 쓴다.
 MODEL = "claude-sonnet-5"
 
+# Anthropic 호출 경로. Cloudflare AI Gateway 를 거친다.
+# api.anthropic.com 으로 직접 나가면 Workers 의 나가는 IP 일부가 403 으로 막히고,
+# 그 차단이 워커 인스턴스에 고정이라 재시도로도 뚫리지 않는다.
+# (실측: 직접 호출은 3라운드 중 2라운드가 8/8 실패, 게이트웨이는 24/24 성공)
+# 문제가 생기면 이 줄만 지우면 직접 호출로 되돌아간다.
+ANTHROPIC_URL = "https://gateway.ai.cloudflare.com/v1/ee391c04474e3d92ff91d99b2ddf3776/emmaus/anthropic/v1/messages"
+
 # 결과 캐시. 같은 요청은 최초 1회만 과금되고 그 뒤로는 KV에서 바로 나온다.
 #   wrangler kv namespace create SUMCACHE
 [[kv_namespaces]]

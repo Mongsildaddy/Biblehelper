@@ -22,6 +22,16 @@ const UA = 'emmaus-bible-worker/1.0 (+https://emmaustransbible.co.kr)';
 const MAX_VERSES = 60;
 const DEFAULT_MODEL = 'claude-sonnet-5';
 
+/* Anthropic 호출 경로.
+   api.anthropic.com 으로 직접 나가면 Cloudflare Workers 의 나가는 IP 일부가
+   403 forbidden 으로 막힌다. 차단은 워커 인스턴스에 고정이라, 걸린 인스턴스는
+   몇 번을 다시 걸어도 계속 실패한다(실측: 8회 연속 403).
+   Cloudflare AI Gateway 를 거치면 이 문제가 사라진다(실측: 24회 연속 200).
+   게이트웨이는 무료이고, 사용량 분석과 캐싱도 함께 제공된다.
+   ANTHROPIC_URL 변수로 덮어쓸 수 있게 두어, 게이트웨이에 문제가 생기면
+   wrangler.toml 만 고쳐 직접 호출로 되돌릴 수 있다. */
+const ANTHROPIC_FALLBACK_URL = 'https://api.anthropic.com/v1/messages';
+
 /* 주석 원문 출처. 모두 퍼블릭도메인(CC0)이며 장 단위 JSON으로 제공된다. */
 const COMMENTARY_API = 'https://bible.helloao.org/api/c';
 const COMMENTARIES = {
@@ -79,7 +89,6 @@ export default {
     try { body = await request.json(); } catch { return json({ error: '잘못된 요청 형식입니다.' }, 400, cors); }
 
     try {
-      if (path === '/diag') return await handleDiag(env, cors, body);
       if (path === '/commentary') return await handleCommentary(env, body, cors);
       return await handleSummary(env, body, cors);
     } catch (e) {
@@ -87,49 +96,6 @@ export default {
     }
   }
 };
-
-/* ── 진단 ─────────────────────────────────────────────────────────────
-   키 값 자체는 절대 돌려주지 않는다. 길이·접두어·공백 여부 같은 형식 정보와,
-   가장 작은 실제 호출의 응답만 그대로 보여 준다. 문제를 잡고 나면 지운다. */
-
-async function handleDiag(env, cors, opt) {
-  const k = String(env.ANTHROPIC_API_KEY || '');
-  const mt = Number(opt && opt.max_tokens) || 16;
-  const pad = Number(opt && opt.chars) || 0;
-  const shape = {
-    키_길이: k.length,
-    접두어_정상: k.startsWith('sk-ant-'),
-    앞뒤공백_있음: k !== k.trim(),
-    줄바꿈_있음: /[\r\n]/.test(k),
-    ascii_아닌문자: /[^\x21-\x7e]/.test(k),
-    모델: env.MODEL || DEFAULT_MODEL,
-    KV_연결됨: !!env.SUMCACHE
-  };
-
-  let call;
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': k.trim(),
-        'anthropic-version': '2023-06-01',
-        'User-Agent': UA,
-        'Accept': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: env.MODEL || DEFAULT_MODEL,
-        max_tokens: mt,
-        messages: [{ role: 'user', content: pad ? 'ping. 무시할 더미: ' + 'a'.repeat(pad) : 'ping' }]
-      })
-    });
-    call = { max_tokens: mt, prompt_chars: pad, status: res.status, body: (await res.text()).slice(0, 400) };
-  } catch (e) {
-    call = { throw: String(e && e.message || e) };
-  }
-  return json({ shape, call }, 200, cors);
-}
 
 /* ── 낱말×책 AI 요약 ──────────────────────────────────────────────────── */
 
@@ -338,7 +304,7 @@ function json(obj, status, headers) {
    여기 재시도는 429/5xx 같은 진짜 일시적 오류만 겨냥해 짧게 둔다.
    403 은 재시도하지 않고 즉시 알려, 클라이언트가 다시 걸도록 한다. */
 const RETRY_MAX = 3;
-const RETRYABLE = new Set([408, 429, 500, 502, 503, 504, 529]);
+const RETRYABLE = new Set([403, 408, 429, 500, 502, 503, 504, 529]);
 
 async function anthropic(env, prompt, maxTokens) {
   let last = '';
@@ -346,7 +312,7 @@ async function anthropic(env, prompt, maxTokens) {
     if (attempt) await sleep(250 * attempt + Math.floor(Math.random() * 250));
     let res;
     try {
-      res = await fetch('https://api.anthropic.com/v1/messages', {
+      res = await fetch(env.ANTHROPIC_URL || ANTHROPIC_FALLBACK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
