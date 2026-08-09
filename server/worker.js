@@ -92,7 +92,10 @@ export default {
       if (path === '/commentary') return await handleCommentary(env, body, cors);
       return await handleSummary(env, body, cors);
     } catch (e) {
-      return json({ error: String(e.message || e), retryable: !!e.retryable }, 502, cors);
+      /* 영구 오류는 502(일시적 장애)가 아니라 409로 돌려준다. 클라이언트가
+         상태코드만 보고도 재시도 대상이 아님을 알 수 있다. */
+      const st = e.fatal ? 409 : 502;
+      return json({ error: String(e.message || e), retryable: !!e.retryable, fatal: !!e.fatal }, st, cors);
     }
   }
 };
@@ -335,7 +338,12 @@ async function anthropic(env, prompt, maxTokens) {
       const data = await res.json();
       return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
     }
-    last = `${res.status} ${(await res.text()).slice(0, 200)}`;
+    const raw = (await res.text()).slice(0, 400);
+    /* 다시 걸어도 절대 풀리지 않는 오류는 즉시 알린다. 크레딧 소진이나 키 문제를
+       재시도하면 사용자는 몇십 초 동안 "시도 중"만 보다가 원인을 못 알게 된다. */
+    const fatal = permanent(res.status, raw);
+    if (fatal) throw fatalError(fatal);
+    last = `${res.status} ${raw.slice(0, 200)}`;
     if (!RETRYABLE.has(res.status)) break;
   }
   if (last.startsWith('403')) {
@@ -344,6 +352,28 @@ async function anthropic(env, prompt, maxTokens) {
     throw e;
   }
   throw new Error(`Anthropic API 호출 실패 ${last}`);
+}
+
+/* Anthropic 응답을 보고 '영구 오류'인지 가린다. 돌려주는 문구는 사용자가
+   그대로 읽을 것이므로, 무엇이 문제이고 누가 고쳐야 하는지 알 수 있게 쓴다. */
+function permanent(status, raw) {
+  const t = raw.toLowerCase();
+  if (t.includes('credit balance') || t.includes('billing'))
+    return '서버의 API 크레딧이 소진되어 새로 만들 수 없습니다. 이미 만들어진 요약과 주석은 그대로 보실 수 있습니다.';
+  if (status === 401 || t.includes('authentication_error') || t.includes('invalid x-api-key'))
+    return '서버의 API 키에 문제가 있습니다. 관리자 확인이 필요합니다.';
+  if (status === 403 && t.includes('permission'))
+    return '서버의 API 키에 이 작업 권한이 없습니다. 관리자 확인이 필요합니다.';
+  if (status === 404 && t.includes('model'))
+    return '설정된 AI 모델을 찾을 수 없습니다. 관리자 확인이 필요합니다.';
+  return null;
+}
+
+function fatalError(msg) {
+  const e = new Error(msg);
+  e.retryable = false;
+  e.fatal = true;
+  return e;
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }

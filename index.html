@@ -411,8 +411,13 @@ async function apiPost(path, body, tries, onTry){
       d=await r.json();
     }catch(e){ last='연결 실패'; await sleepMs(350); continue; }
     if(r.ok)return {ok:true,data:d};
-    /* 재시도해도 소용없는 응답이면 즉시 알린다 */
-    if(d&&d.unavailable)return {ok:false,data:d,fatal:true};
+    /* 재시도해도 소용없는 응답이면 즉시 알린다.
+       예전에는 status<500 일 때만 포기했는데, 서버가 이런 오류도 502 로
+       돌려주는 바람에 크레딧 소진 같은 영구 오류를 40번씩 다시 걸었다.
+       이제 서버가 fatal 플래그와 409 를 보내므로 그것을 먼저 본다. */
+    if(d&&(d.fatal||d.unavailable))return {ok:false,data:d,fatal:true};
+    if(r.status===409)return {ok:false,data:d,fatal:true};
+    if(d&&d.error&&d.retryable===false)return {ok:false,data:d,fatal:true};
     if(d&&d.error&&!d.retryable&&r.status<500)return {ok:false,data:d,fatal:true};
     last=(d&&d.error)||('서버 응답 '+r.status);
     await sleepMs(350);
@@ -866,8 +871,7 @@ async function openCommentary(){
       trackEvent('commentary_fail',{book:m.name,chapter:ch,part});
       return;
     }
-    out.innerHTML=`<div class="comm-wait">주석을 불러오지 못했습니다.<br>
-      <span style="font-size:12.5px">${esc(String(d.error||'').slice(0,160))}</span></div>`;
+    out.innerHTML=`<div class="comm-wait">${esc(String(d.error||'주석을 불러오지 못했습니다.').slice(0,220))}</div>`;
     return;
   }
 
