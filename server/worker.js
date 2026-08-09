@@ -42,15 +42,21 @@ const COMMENTARIES = {
   'keil-delitzsch': '카일-델리취 구약주석'
 };
 
-/* 클라크는 9권이 통째로 빠져 있다(신명기·사사기·시편·잠언·전도서·예레미야·
-   요엘·말라기·마태복음). 하필 설교에 가장 많이 쓰이는 책들이라, 없는 책은
-   대신 볼 주석을 순서대로 시도한다. 어느 주석을 실제로 썼는지는 응답의
-   commentary 필드로 돌려주므로 화면에 그대로 밝힐 수 있다. */
+/* 기본 주석은 제이미슨-파우셋-브라운(JFB).
+   66권 전권을 담고 있어 대체가 일어나지 않고, 같은 장을 클라크·존 길의 약
+   절반 분량으로 다룬다(실측 6개 장 합계 440.6KB → 234.5KB, 53%). 번역 비용과
+   대기 시간이 그만큼 줄고, 목회자가 읽기에도 군더더기가 적다.
+   클라크는 9권이 통째로 빠져 있다(신명기·사사기·시편·잠언·전도서·예레미야·
+   요엘·말라기·마태복음). 하필 설교에 가장 많이 쓰이는 책들이다. */
+const DEFAULT_COMMENTARY = 'jamieson-fausset-brown';
+
+/* 요청한 주석에 그 장이 없으면 순서대로 시도한다. 어느 주석을 실제로 썼는지는
+   응답의 commentary 필드로 돌려주므로 화면에 그대로 밝힌다. */
 const FALLBACK = {
+  'jamieson-fausset-brown': ['john-gill', 'adam-clarke', 'matthew-henry'],
   'adam-clarke': ['john-gill', 'jamieson-fausset-brown', 'matthew-henry'],
   'matthew-henry': ['john-gill', 'jamieson-fausset-brown'],
   'keil-delitzsch': ['john-gill', 'jamieson-fausset-brown'],
-  'jamieson-fausset-brown': ['john-gill'],
   'john-gill': ['jamieson-fausset-brown']
 };
 
@@ -127,7 +133,7 @@ async function handleSummary(env, body, cors) {
 async function handleCommentary(env, body, cors) {
   const osis = String(body.osis || '').trim();
   const chapter = parseInt(body.chapter, 10);
-  const id = String(body.commentary || 'adam-clarke').trim();
+  const id = String(body.commentary || DEFAULT_COMMENTARY).trim();
   /* 조각 번호. 긴 장을 한 요청에 다 번역하면 Cloudflare 가 100초쯤에 연결을
      끊는다. 클라이언트가 조각을 하나씩 요청하고, 조각마다 KV에 저장하므로
      실패해도 이미 번역된 조각은 다시 과금되지 않는다. */
@@ -138,13 +144,19 @@ async function handleCommentary(env, body, cors) {
   if (!code) return json({ error: '이 책은 주석이 제공되지 않습니다.', unavailable: true }, 404, cors);
   if (!(chapter >= 1 && chapter <= 150)) return json({ error: '장 번호가 올바르지 않습니다.' }, 400, cors);
 
-  /* 완성본이 있으면 바로 준다 */
+  /* 완성본이 있으면 바로 준다.
+     기본 주석을 바꾸기 전에 다른 주석으로 이미 번역해 둔 장이 있으면 그것을
+     쓴다. 번역은 한 장에 수천 원이 아니라 수백 원이지만, 이미 지불한 작업을
+     버릴 이유가 없고 사용자에게는 기다림 없이 바로 열리는 편이 낫다. */
   const fullKey = `c:${id}:${osis}.${chapter}`;
   if (env.SUMCACHE) {
-    const hit = await env.SUMCACHE.get(fullKey);
-    if (hit) {
-      try { const d = JSON.parse(hit); if (d.text) return json({ ...d, done: true, cached: true }, 200, cors); }
-      catch { /* 옛 형식이면 무시하고 새로 만든다 */ }
+    for (const cand of [id, ...(FALLBACK[id] || [])]) {
+      const hit = await env.SUMCACHE.get(`c:${cand}:${osis}.${chapter}`);
+      if (!hit) continue;
+      try {
+        const d = JSON.parse(hit);
+        if (d.text) return json({ ...d, done: true, cached: true }, 200, cors);
+      } catch { /* 옛 형식이면 무시하고 다음 후보로 */ }
     }
   }
 
