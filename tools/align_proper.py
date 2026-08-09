@@ -17,8 +17,9 @@ HAN = re.compile(r'[가-힣]+')
 MINLEN, MAXLEN = 2, 6
 
 def load():
-    """[(스트롱번호 집합, 한국어 본문), ...] 를 절 단위로 모은다."""
+    """[(스트롱번호 집합, 한국어 본문), ...] 를 절 단위로 모으고, 등장 횟수도 센다."""
     verses = []
+    occ = collections.Counter()
     for fn in sorted(os.listdir(os.path.join(ROOT, 'books'))):
         if not fn.endswith('.json') or fn.startswith('_'):
             continue
@@ -27,11 +28,15 @@ def load():
         for ch, vs in heb.items():
             kch = kor.get(ch) or {}
             for v, words in vs.items():
+                ss = {w['s'] for w in words if w.get('s')}
+                for w in words:
+                    if w.get('s'):
+                        occ[w['s']] += 1
                 t = kch.get(v)
                 if not t:
                     continue
-                verses.append(({w['s'] for w in words if w.get('s')}, t))
-    return verses
+                verses.append((ss, t))
+    return verses, occ
 
 """한글 후보를 로마자로 되돌려 음역 필드(t)와 대조한다.
 
@@ -136,9 +141,38 @@ def candidates(s, df, by_strong, cache, translit, topn=3):
             break
     return out
 
+def emit(df, by_strong, cache, lex, occ):
+    """뜻이 비어 있는 고유명사의 후보를 검수용 파일로 뽑는다."""
+    todo = [s for s, v in lex.items()
+            if not (v or {}).get('ko') and re.match(r'^[A-Z]', str((v or {}).get('ge') or ''))]
+    rows, empty = [], 0
+    for s in todo:
+        cs = candidates(s, df, by_strong, cache, lex[s].get('t') or '')
+        if not cs:
+            empty += 1
+            continue
+        sc, recall, prec, snd, _, base = cs[0]
+        rows.append({
+            's': s, 'ko': base, 'ge': lex[s].get('ge') or '', 't': lex[s].get('t') or '',
+            'n': occ.get(s, 0), 'score': round(sc, 3), 'snd': round(snd, 2),
+            'alt': [c[5] for c in cs[1:]]
+        })
+    rows.sort(key=lambda r: (-r['score'], -r['n']))
+    out = os.path.join(ROOT, 'tools', '_proper_cand.json')
+    json.dump(rows, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print('\n=== 검수 후보 ===')
+    print('뜻이 빈 고유명사 %d개 중 후보를 뽑은 것 %d개, 못 뽑은 것 %d개' % (len(todo), len(rows), empty))
+    for lo, hi, lab in [(0.8, 1.1, '매우 높음'), (0.6, 0.8, '높음'), (0.4, 0.6, '보통'), (0, 0.4, '낮음')]:
+        g = [r for r in rows if lo <= r['score'] < hi]
+        print('  확신 %-6s %5d개' % (lab, len(g)))
+    print('저장: tools/_proper_cand.json')
+    print('\n확신 높은 표본 20개')
+    for r in rows[:20]:
+        print('  %-7s %-8s  %-4d회  %-22s %s' % (r['s'], r['ko'], r['n'], r['ge'][:22], r['t'][:16]))
+
 def main():
     print('본문 읽는 중...')
-    verses = load()
+    verses, occ = load()
     print('절 %d개' % len(verses))
     print('부분문자열 색인 만드는 중...')
     df, by_strong, cache = build(verses)
@@ -174,6 +208,8 @@ def main():
     print('\n틀린 표본')
     for s, truth, top, r, snd in misses:
         print('  %-7s 정답 %-10s 후보 %-10s (재현 %.2f 소리 %.2f)' % (s, truth, top, r, snd))
+
+    emit(df, by_strong, cache, lex, occ)
 
 if __name__ == '__main__':
     main()

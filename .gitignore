@@ -21,3 +21,5 @@ tools/_ko_todo_Gname.txt
 server/.wrangler/
 server/node_modules/
 .dev.vars
+
+tools/_proper_cand.json
