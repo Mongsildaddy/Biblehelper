@@ -118,6 +118,12 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .give a.primary{display:inline-block;background:var(--ink);color:var(--vellum);text-decoration:none;padding:9px 20px;border-radius:3px;font-size:13.5px}
 .give a.primary:hover{background:var(--gold);color:var(--ink)}
 .give .note{font-size:11.5px;color:var(--muted)}
+/* 광고 자리. 광고 스크립트가 안 붙으면 높이 0으로 접혀 흔적이 남지 않는다. */
+.adslot{margin:30px 0 0;text-align:center;min-height:0;overflow:hidden}
+.adslot .lab{font-size:10.5px;color:var(--muted);letter-spacing:.08em;margin-bottom:6px}
+.sitefoot{margin:34px 0 0;padding:16px 0 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.sitefoot a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent}
+.sitefoot a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 /* ── 모달 (가이드 · 후원) ─────────────────────────────────────────────── */
 .modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
 .modal.on{display:flex}
@@ -300,6 +306,14 @@ function trackEvent(name,params){gtag('event',name,params||{});}
     <span class="note">정기결제가 아닙니다 · 가입할 필요 없습니다</span>
   </div>
 </section>
+
+<div class="adslot" id="adslot" hidden><div class="lab">광고</div><div id="adbox"></div></div>
+
+<div class="sitefoot">
+  <span>엠마오 원어대조성경</span>
+  <a href="/privacy.html">개인정보처리방침</a>
+  <a href="mailto:ftkengjune@gmail.com">문의</a>
+</div>
 </div>
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel"><div class="top"><button class="close" id="close">×</button><div class="heb" id="p-heb"></div><div class="translit" id="p-translit"></div><div><span class="strong" id="p-strong"></span></div></div>
@@ -697,6 +711,30 @@ chapSel.addEventListener('change',e=>render(+e.target.value));
                예) '카카오뱅크 3333-01-2345678 홍길동'
      etc     : 그 밖의 후원 링크 {label, url} 배열. 투네이션·PayPal 등 */
 const GIVE={ kakao:'https://qr.kakaopay.com/FTpDPUYpp3e803411', account:'', etc:[] };
+
+/* 애드센스. 승인이 나면 게시자 ID(ca-pub-…)와 광고 단위의 슬롯 번호를 여기 넣는다.
+   그 전까지는 비워 둔다 — 비어 있으면 스크립트를 아예 불러오지 않고 광고 자리도
+   나타나지 않으므로, 심사 전에 빈 칸이 보이거나 페이지가 느려질 일이 없다.
+   광고는 본문이 아니라 맨 아래 '더 알아보기'와 후원 안내 다음에만 붙인다. */
+const ADS={ client:'', slot:'' };
+
+(function initAds(){
+  if(!ADS.client||!ADS.slot)return;
+  const ins=document.createElement('ins');
+  ins.className='adsbygoogle';
+  ins.style.display='block';
+  ins.setAttribute('data-ad-client',ADS.client);
+  ins.setAttribute('data-ad-slot',ADS.slot);
+  ins.setAttribute('data-ad-format','auto');
+  ins.setAttribute('data-full-width-responsive','true');
+  document.getElementById('adbox').appendChild(ins);
+  const s=document.createElement('script');
+  s.async=true; s.crossOrigin='anonymous';
+  s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+encodeURIComponent(ADS.client);
+  document.head.appendChild(s);
+  document.getElementById('adslot').hidden=false;
+  (window.adsbygoogle=window.adsbygoogle||[]).push({});
+})();
 
 function buildGive(){
   if(!(GIVE.kakao||GIVE.account||GIVE.etc.length))return;
