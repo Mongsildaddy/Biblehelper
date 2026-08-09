@@ -22,3 +22,12 @@ ANTHROPIC_URL = "https://gateway.ai.cloudflare.com/v1/ee391c04474e3d92ff91d99b2d
 [[kv_namespaces]]
 binding = "SUMCACHE"
 id = "4a8a33bdba194ae99e435de24a2abd23"
+
+# 순간 폭주 차단. IP 하나가 60초에 30번을 넘기면 429로 끊는다.
+# namespace_id 는 계정 안에서 이 제한을 구분하는 임의의 숫자다.
+[[ratelimits]]
+name = "RL"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 30
+  period = 60

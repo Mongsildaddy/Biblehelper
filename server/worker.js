@@ -80,6 +80,22 @@ const CHUNK_CHARS = 9000;
 const MAX_CHUNKS = 14;          /* 아주 긴 장(로마서 8장 ~102KB)도 덮는다 */
 const MAX_GLOSSARY = 220;
 
+/* ── 사용량 제한 ───────────────────────────────────────────────────────
+   ALLOWED_ORIGINS 는 Origin 헤더만 본다. 그 헤더는 curl 한 줄이면 위조되므로
+   도메인 검사는 실수를 막을 뿐 악용을 막지 못한다. 정적 사이트라 로그인이
+   없으니 호출자를 신원으로 가릴 방법도 없다. 남는 방어선은 사용량 상한이다.
+
+   실제로 2026-08 초, 욥기 3~31장·아가 전권·이사야 33개 장이 연속으로 번역된
+   기록이 KV에 남았다. 사람이 클릭한 모양이 아니다.
+
+   비용이 드는 것은 '새로 만드는 호출'뿐이다. 캐시에서 나오는 응답은 공짜이므로
+   상한을 세지 않는다. 이미 번역된 장을 읽는 데에는 아무 제한이 없다. */
+const UNIT_SUMMARY = 1;         /* 낱말 요약 1회 ≈ 출력 900토큰 */
+const UNIT_CHUNK = 3;           /* 주석 조각 1개 ≈ 출력 4000토큰 안팎 */
+const DAY_UNITS = 120;          /* 사이트 전체 하루 한도 (주석 약 13~40장) */
+const IP_UNITS = 36;            /* 한 사람 하루 한도 (주석 약 4~12장) */
+const BURST = 30;               /* 60초당 요청 수 (캐시 응답 포함) */
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
@@ -91,12 +107,24 @@ export default {
     if (!cors['Access-Control-Allow-Origin']) return json({ error: '허용되지 않은 도메인입니다.' }, 403, {});
     if (!env.ANTHROPIC_API_KEY) return json({ error: '서버에 API 키가 설정되지 않았습니다.' }, 500, cors);
 
+    const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+
+    /* 짧은 시간에 몰아치는 긁기를 먼저 끊는다. KV 일일 한도는 결과적으로
+       일관적이라 순간 폭주를 놓칠 수 있는데, 이 바인딩은 그 틈을 메운다. */
+    if (env.RL) {
+      const { success } = await env.RL.limit({ key: ip });
+      if (!success) return json({ error: '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.', retryable: true }, 429, cors);
+    }
+
     let body;
     try { body = await request.json(); } catch { return json({ error: '잘못된 요청 형식입니다.' }, 400, cors); }
 
+    /* 관리자는 상한을 받지 않는다. 인기 있는 장을 미리 번역해 둘 때 쓴다. */
+    const budget = { env, ip, exempt: !!(env.ADMIN_KEY && body.admin === env.ADMIN_KEY) };
+
     try {
-      if (path === '/commentary') return await handleCommentary(env, body, cors);
-      return await handleSummary(env, body, cors);
+      if (path === '/commentary') return await handleCommentary(env, body, cors, budget);
+      return await handleSummary(env, body, cors, budget);
     } catch (e) {
       /* 영구 오류는 502(일시적 장애)가 아니라 409로 돌려준다. 클라이언트가
          상태코드만 보고도 재시도 대상이 아님을 알 수 있다. */
@@ -108,7 +136,7 @@ export default {
 
 /* ── 낱말×책 AI 요약 ──────────────────────────────────────────────────── */
 
-async function handleSummary(env, body, cors) {
+async function handleSummary(env, body, cors, budget) {
   const strong = String(body.strong || '').trim();
   const book = String(body.book || '').trim();
   const verses = Array.isArray(body.verses) ? body.verses.slice(0, MAX_VERSES) : [];
@@ -121,6 +149,7 @@ async function handleSummary(env, body, cors) {
     if (hit) return json({ summary: hit, cached: true }, 200, cors);
   }
 
+  await charge(budget, UNIT_SUMMARY);
   const summary = await callClaude(env, body, strong, book, verses);
   if (!summary) return json({ error: '요약이 생성되지 않았습니다.' }, 502, cors);
 
@@ -130,7 +159,7 @@ async function handleSummary(env, body, cors) {
 
 /* ── 장별 주석 번역 ───────────────────────────────────────────────────── */
 
-async function handleCommentary(env, body, cors) {
+async function handleCommentary(env, body, cors, budget) {
   const osis = String(body.osis || '').trim();
   const chapter = parseInt(body.chapter, 10);
   const id = String(body.commentary || DEFAULT_COMMENTARY).trim();
@@ -179,6 +208,7 @@ async function handleCommentary(env, body, cors) {
   let piece = env.SUMCACHE ? await env.SUMCACHE.get(partKey) : null;
   let pieceCached = !!piece;
   if (!piece) {
+    await charge(budget, UNIT_CHUNK);
     piece = await translateChunk(env, {
       text: chunks[part - 1], glossary: buildGlossary(body.glossary),
       ref: `${osis} ${chapter}장`, name: COMMENTARIES[used], part, total
@@ -292,6 +322,36 @@ ${o.text}
 
 /* ── 공통 ─────────────────────────────────────────────────────────────── */
 
+/* 새로 만드는 호출 직전에만 부른다. 한도를 넘으면 '영구 오류'로 던져서
+   클라이언트가 40번 재시도하지 않고 곧바로 사유를 보여 주게 한다.
+   KV는 결과적 일관성이라 동시 요청에서 몇 건 새어 나갈 수 있다. 정확한
+   회계가 목적이 아니라 폭주를 막는 것이 목적이므로 그 정도는 감수한다. */
+async function charge(budget, units) {
+  const { env, ip, exempt } = budget;
+  if (exempt || !env.SUMCACHE) return;
+
+  const day = new Date().toISOString().slice(0, 10);
+  const dayKey = `rl:d:${day}`, ipKey = `rl:i:${day}:${ip}`;
+  const [dRaw, iRaw] = await Promise.all([env.SUMCACHE.get(dayKey), env.SUMCACHE.get(ipKey)]);
+  const dUsed = Number(dRaw) || 0, iUsed = Number(iRaw) || 0;
+
+  /* 0 은 '새 번역을 전부 잠근다'는 뜻이라 유효한 값이다. || 로 기본값을
+     끌어오면 0이 falsy 라 잠금이 풀려 버리므로 빈 값만 기본값으로 본다. */
+  const dayMax = num(env.DAY_UNITS, DAY_UNITS);
+  const ipMax = num(env.IP_UNITS, IP_UNITS);
+
+  if (dUsed + units > dayMax)
+    throw fatalError('오늘 새로 만들 수 있는 분량을 모두 썼습니다. 이미 번역된 장과 낱말 요약은 그대로 보실 수 있고, 새 번역은 내일 다시 열립니다.');
+  if (iUsed + units > ipMax)
+    throw fatalError('한 분이 하루에 새로 만들 수 있는 분량을 넘었습니다. 이미 번역된 장과 낱말 요약은 계속 보실 수 있습니다. 새 번역은 내일 다시 열립니다.');
+
+  /* 이틀 뒤 자동 삭제 — 카운터가 KV에 쌓이지 않게 한다 */
+  await Promise.all([
+    env.SUMCACHE.put(dayKey, String(dUsed + units), { expirationTtl: 172800 }),
+    env.SUMCACHE.put(ipKey, String(iUsed + units), { expirationTtl: 172800 })
+  ]);
+}
+
 function corsHeaders(origin, env) {
   const list = String(env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
   const ok = list.includes('*') || list.includes(origin);
@@ -389,6 +449,12 @@ function fatalError(msg) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function num(v, dflt) {
+  if (v === undefined || v === null || v === '') return dflt;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : dflt;
+}
 
 async function callClaude(env, body, strong, book, verses) {
   const lines = verses.map(v => `${book} ${v.ref} ${String(v.text || '').slice(0, 200)}`).join('\n');
