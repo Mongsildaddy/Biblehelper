@@ -123,6 +123,7 @@ export default {
     const budget = { env, ip, exempt: !!(env.ADMIN_KEY && body.admin === env.ADMIN_KEY) };
 
     try {
+      if (path === '/gloss') return await handleGloss(env, body, cors, budget);
       if (path === '/commentary') return await handleCommentary(env, body, cors, budget);
       return await handleSummary(env, body, cors, budget);
     } catch (e) {
@@ -155,6 +156,86 @@ async function handleSummary(env, body, cors, budget) {
 
   if (env.SUMCACHE) await env.SUMCACHE.put(cacheKey, summary);
   return json({ summary }, 200, cors);
+}
+
+/* ── 낱말 뜻 일괄 번역 (관리자 전용) ──────────────────────────────────────
+
+   _lex.json 의 빈 ko 필드를 채우기 위한 도구용 경로다. 화면에서는 부르지
+   않는다. ADMIN_KEY 를 아는 요청만 통과시키는 이유는 두 가지다. 하나는
+   상한을 건너뛰기 때문이고, 하나는 이 경로가 임의의 낱말 목록을 받으므로
+   열어 두면 번역기로 남용될 수 있기 때문이다.
+
+   결과는 저장소의 tools/koglo/*.json 로 들어가 영구히 남으므로, 같은
+   낱말을 두 번 부를 일이 없다. 그래서 KV 캐시를 두지 않는다. */
+const MAX_GLOSS_ITEMS = 100;
+
+async function handleGloss(env, body, cors, budget) {
+  if (!budget.exempt) return json({ error: '관리자 전용 경로입니다.' }, 403, cors);
+
+  const items = (Array.isArray(body.items) ? body.items : [])
+    .slice(0, MAX_GLOSS_ITEMS)
+    .filter(it => it && /^[GH]\d{4}[a-z]?$/.test(String(it.s || '')));
+  if (!items.length) return json({ error: '낱말 목록이 비어 있습니다.' }, 400, cors);
+
+  const lines = items.map(it => [
+    it.s,
+    String(it.t || '').slice(0, 40),
+    String(it.ge || '').slice(0, 60),
+    String(it.d || it.sd || '').replace(/\s+/g, ' ').slice(0, 140)
+  ].join(' | ')).join('\n');
+
+  const prompt = `아래는 성경 원어 낱말 목록입니다. 각 줄은 «스트롱번호 | 음역 | 영어 뜻 | 사전 정의»입니다.
+각 낱말의 한국어 뜻을 지어 주세요. 원어 대조 성경의 낱말 칩에 한 줄로 들어가는 짧은 뜻입니다.
+
+표기 규칙 (기존 3,500개와 반드시 같은 방식으로 씁니다)
+- 아주 짧게 씁니다. 평균 5자, 최대 15자를 넘기지 않습니다.
+- 동사는 '나누다', '펴다', '바라다'처럼 '~다'로 끝내는 기본형으로 씁니다.
+- 명사는 '길', '왕', '시체'처럼 명사형 그대로 씁니다.
+- 형용사는 '참된', '거룩한'처럼 관형형으로 씁니다.
+- 뜻이 갈리면 가운뎃점으로 잇습니다: '헛됨·거짓', '코·분노', '펴다·기울이다'.
+  최대 3개까지만 적고, 가장 흔한 뜻을 앞에 둡니다.
+- 성경 인명·지명은 개역한글 표기를 따릅니다.
+- 사전 정의에 Aramaic 이 보이면 뜻 뒤에 '(아람)'을 붙입니다: '그릇(아람)'.
+- 숫자는 '예순(60)', '백(100)'처럼 한글과 숫자를 함께 적습니다.
+- 한국어 띄어쓰기를 지킵니다: '사망의 그늘', '신접한 자'처럼 씁니다.
+  붙여 쓰면 안 됩니다('사망의그늘', '신접한자'는 잘못).
+- 한 낱말 안에서 품사를 섞지 않습니다. '품꾼'이면 명사로만, '고용된'이면
+  관형형으로만 잇습니다.
+- 설명·품사·괄호 주석을 덧붙이지 않습니다. 마크다운을 쓰지 않습니다.
+- 뜻을 확정할 수 없으면 영어 뜻을 그대로 직역해서라도 반드시 채웁니다. 빈 값을 두지 않습니다.
+
+출력 형식
+JSON 객체 하나만 출력합니다. 키는 스트롱번호, 값은 한국어 뜻입니다.
+설명이나 코드펜스 없이 { 로 시작해 } 로 끝나야 합니다.
+목록에 있는 ${items.length}개를 하나도 빠뜨리지 마세요.
+
+--- 목록 시작 ---
+${lines}
+--- 목록 끝 ---`;
+
+  const raw = await anthropic(env, prompt, 8000);
+  const obj = parseJsonObject(raw);
+  if (!obj) return json({ error: '응답을 해석하지 못했습니다.', raw: raw.slice(0, 300) }, 502, cors);
+
+  /* 요청하지 않은 키가 섞이거나 길이가 튀는 것을 여기서 막는다 */
+  const out = {};
+  const want = new Set(items.map(it => it.s));
+  for (const [k, v] of Object.entries(obj)) {
+    if (!want.has(k)) continue;
+    const ko = String(v || '').trim().replace(/\s+/g, ' ');
+    if (ko && ko.length <= 18) out[k] = ko;
+  }
+  return json({ glosses: out, asked: items.length, got: Object.keys(out).length }, 200, cors);
+}
+
+/* 모델이 코드펜스나 앞뒤 설명을 붙이는 경우가 있어 중괄호만 잘라 낸다. */
+function parseJsonObject(raw) {
+  const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
+  if (s < 0 || e <= s) return null;
+  try {
+    const o = JSON.parse(raw.slice(s, e + 1));
+    return o && typeof o === 'object' && !Array.isArray(o) ? o : null;
+  } catch { return null; }
 }
 
 /* ── 장별 주석 번역 ───────────────────────────────────────────────────── */
