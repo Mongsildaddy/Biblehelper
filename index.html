@@ -418,6 +418,13 @@ let LEX={}, MANI=[], CUR=null, curBi=0, curTest='ot';
 const bookSel=document.getElementById('book'),chapSel=document.getElementById('chap'),text=document.getElementById('text');
 /* 용례(콘코던스) 상태 */
 const IDX={},BOOKCACHE=new Map(),MAXCACHE=4;
+/* 데이터 버전. books/ 아래 파일을 고쳐 배포할 때마다 올린다.
+   GitHub Pages 는 모든 파일에 max-age=600 을 붙여, 배포 직후 10분 동안은
+   브라우저가 옛 파일을 그대로 쓴다. 그 사이 새 index.html 과 옛 책 JSON 이
+   섞이면 새 기능이 데이터 없이 돌아간다(문법 줄이 안 보이는 식).
+   주소에 버전을 붙이면 새 index.html 은 반드시 새 데이터를 받는다. */
+const DATA_V='20261011b';
+function dataUrl(f){return 'books/'+f+'?v='+DATA_V;}
 let OCC=null,occToken=0;
 /* ── AI 요약 설정 ──────────────────────────────
    SUMAPI: 실시간 요약 서버(Cloudflare Worker) 주소.
@@ -467,7 +474,7 @@ function sumCacheSet(k,v){try{localStorage.setItem('miqra.sum.'+k,v);}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function getBook(bi){
   if(BOOKCACHE.has(bi)){const b=BOOKCACHE.get(bi);BOOKCACHE.delete(bi);BOOKCACHE.set(bi,b);return b;}
-  const b=await (await fetch('books/'+MANI[bi].osis+'.json')).json();
+  const b=await (await fetch(dataUrl(MANI[bi].osis+'.json'))).json();
   BOOKCACHE.set(bi,b);
   while(BOOKCACHE.size>MAXCACHE){
     let victim=null;
@@ -480,7 +487,7 @@ async function getBook(bi){
 async function getIdx(s){
   const shard=s.slice(0,3);
   if(!(shard in IDX)){
-    try{IDX[shard]=await (await fetch('books/idx/'+shard+'.json')).json();}
+    try{IDX[shard]=await (await fetch(dataUrl('idx/'+shard+'.json'))).json();}
     catch(e){IDX[shard]={};}
   }
   return IDX[shard][s]||null;
@@ -503,9 +510,9 @@ async function switchTest(t){
 }
 async function boot(){
   try{
-    MANI=await (await fetch('books/_manifest.json')).json();
-    LEX=await (await fetch('books/_lex.json')).json();
-    try{SUM=await (await fetch('books/_sum.json')).json();}catch(e){SUM={};}
+    MANI=await (await fetch(dataUrl('_manifest.json'))).json();
+    LEX=await (await fetch(dataUrl('_lex.json'))).json();
+    try{SUM=await (await fetch(dataUrl('_sum.json'))).json();}catch(e){SUM={};}
     fillBooks();
     document.getElementById('tab-ot').onclick=()=>switchTest('ot');
     document.getElementById('tab-nt').onclick=()=>switchTest('nt');
