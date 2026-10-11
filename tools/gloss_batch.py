@@ -20,7 +20,10 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 API = 'https://miqra-sum.chlqkrtk12.workers.dev/gloss'
 ORIGIN = 'https://emmaustransbible.co.kr'
-OUT = os.path.join(ROOT, 'tools', 'koglo_auto')
+# 묶음 번호는 '지금 비어 있는 목록' 기준이라, 병합한 뒤 다시 돌리면 번호가
+# 0000 부터 새로 매겨진다. 같은 폴더를 쓰면 옛 파일을 보고 전부 건너뛰므로
+# 회차마다 폴더를 바꾼다. build_auto_gloss.py 는 koglo_auto* 를 모두 읽는다.
+OUT = os.path.join(ROOT, 'tools', os.environ.get('MIQRA_GLOSS_OUT', 'koglo_auto'))
 SIZE = 100
 RETRY = 3
 

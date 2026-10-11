@@ -1,4 +1,4 @@
-__pycache__/
+﻿__pycache__/
 *.pyc
 .env
 .DS_Store
@@ -23,4 +23,4 @@ server/node_modules/
 .dev.vars
 
 tools/_proper_cand.json
-tools/koglo_auto/
+tools/koglo_auto*/

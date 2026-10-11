@@ -38,6 +38,11 @@ FIX = {
     'H1325': '밧(용량)',
     'G4568': '스아(용량)',
     'G3712': '길(길이)',
+    # 2회차(koglo_auto2) 검수
+    'G0675': '압비오 저자',
+    'G0370': '합당치 않은',
+    'G0130': '피 흘림',
+    'G6061': '맷돌',
 }
 
 def normalize(v):
@@ -54,11 +59,16 @@ NOT_MOUNT = {'출산', '재산', '유산', '생산', '계산', '청산', '산산
 def main():
     lex = json.load(open(os.path.join(ROOT, 'books', '_lex.json'), encoding='utf-8'))
     allg = {}
-    for fn in sorted(os.listdir(SRC)):
-        if fn.endswith('.json'):
-            allg.update(json.load(open(os.path.join(SRC, fn), encoding='utf-8')))
+    tools = os.path.join(ROOT, 'tools')
+    for d in sorted(x for x in os.listdir(tools) if x.startswith('koglo_auto')):
+        for fn in sorted(os.listdir(os.path.join(tools, d))):
+            if fn.endswith('.json'):
+                allg.update(json.load(open(os.path.join(tools, d, fn), encoding='utf-8')))
+    # 앞 회차에서 a01.json 으로 이미 반영한 값은 _lex.json 에 ko 가 있으므로
+    # 아래 루프에서 건너뛴다. a01.json 을 다시 쓸 때 그 값을 잃지 않게 합쳐 둔다.
+    prev = json.load(open(OUT, encoding='utf-8')) if os.path.exists(OUT) else {}
 
-    out, changed = {}, []
+    out, changed = dict(prev), []
     for k, v in allg.items():
         if (lex.get(k) or {}).get('ko'):
             continue                       # 이미 손으로 채운 값은 건드리지 않는다
@@ -74,7 +84,7 @@ def main():
         out[k] = nv
 
     json.dump(out, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
-    print('a01.json %d개 · 수정 %d개' % (len(out), len(changed)))
+    print('a01.json %d개 (이번에 새로 %d개) · 수정 %d개' % (len(out), len(out) - len(prev), len(changed)))
     for k, a, b in changed:
         print('  %-7s %-14s → %s' % (k, a, b))
 
