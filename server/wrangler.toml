@@ -8,9 +8,11 @@ compatibility_date = "2025-01-01"
 ALLOWED_ORIGINS = "https://emmaustransbible.co.kr,https://www.emmaustransbible.co.kr,https://mongsildaddy.github.io,http://localhost:8765,http://127.0.0.1:8765"
 
 # 사용할 모델. 비워 두면 worker.js의 기본값을 쓴다.
-MODEL = "claude-sonnet-5"
+# Haiku 5.5 는 Sonnet 5 의 1/20 가격이다(입력 0.10 / 출력 0.50 달러, 100만 토큰당).
+MODEL = "claude-haiku-5-5"
 
 # Anthropic 호출 경로. Cloudflare AI Gateway 를 거친다.
+# (403 의 진짜 원인은 아래 [placement] 주석 참고. 게이트웨이로는 해결되지 않았다.)
 # api.anthropic.com 으로 직접 나가면 Workers 의 나가는 IP 일부가 403 으로 막히고,
 # 그 차단이 워커 인스턴스에 고정이라 재시도로도 뚫리지 않는다.
 # (실측: 직접 호출은 3라운드 중 2라운드가 8/8 실패, 게이트웨이는 24/24 성공)
@@ -31,3 +33,12 @@ namespace_id = "1001"
   [ratelimits.simple]
   limit = 30
   period = 60
+
+# ── 워커 실행 위치 고정 ──────────────────────────────────────────────
+# 403 "Request not allowed" 가 간헐적으로 나던 원인. 워커는 사용자와 가까운
+# Cloudflare 데이터센터에서 실행되고 Anthropic 으로 가는 요청도 거기서 나가는데,
+# 한국 접속은 홍콩(HKG)으로 자주 배정되고 홍콩은 Anthropic 미지원 지역이다.
+# 2026-10-11 실측: HKG 8/8 실패, NRT·KIX(일본) 4/4 성공.
+# Anthropic API 가 있는 미국 동부 근처에서 실행되게 고정한다.
+[placement]
+region = "aws:us-east-1"

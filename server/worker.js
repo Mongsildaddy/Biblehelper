@@ -20,7 +20,7 @@
 const UA = 'emmaus-bible-worker/1.0 (+https://emmaustransbible.co.kr)';
 
 const MAX_VERSES = 60;
-const DEFAULT_MODEL = 'claude-sonnet-5';
+const DEFAULT_MODEL = 'claude-haiku-5-5';
 
 /* Anthropic 호출 경로.
    api.anthropic.com 으로 직접 나가면 Cloudflare Workers 의 나가는 IP 일부가
@@ -90,16 +90,31 @@ const MAX_GLOSSARY = 220;
 
    비용이 드는 것은 '새로 만드는 호출'뿐이다. 캐시에서 나오는 응답은 공짜이므로
    상한을 세지 않는다. 이미 번역된 장을 읽는 데에는 아무 제한이 없다. */
-const UNIT_SUMMARY = 1;         /* 낱말 요약 1회 ≈ 출력 900토큰 */
-const UNIT_CHUNK = 3;           /* 주석 조각 1개 ≈ 출력 4000토큰 안팎 */
-const DAY_UNITS = 120;          /* 사이트 전체 하루 한도 (주석 약 13~40장) */
-const IP_UNITS = 36;            /* 한 사람 하루 한도 (주석 약 4~12장) */
+const UNIT_SUMMARY = 1;         /* 낱말 요약 1회 */
+const UNIT_CHUNK = 3;           /* 주석 조각 1개 (출력이 요약의 약 3배) */
+/* Haiku 5.5 기준 1단위 ≈ 0.0015달러 (조각 하나 ≈ 0.0045달러). Sonnet 5 의
+   1/20 값이라 한도를 열 배로 올려도 하루 청구액의 천장은 예전보다 낮다.
+     예전 Sonnet 5: 120단위 ≈ 하루 최대 2.8달러
+     지금 Haiku 5.5: 1200단위 ≈ 하루 최대 1.8달러 */
+const DAY_UNITS = 1200;         /* 사이트 전체 하루 한도 (주석 약 100장) */
+const IP_UNITS = 240;           /* 한 사람 하루 한도 (주석 약 20장) */
 const BURST = 30;               /* 60초당 요청 수 (캐시 응답 포함) */
 
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     const cors = corsHeaders(origin, env);
+    /* 요청이 들어온 Cloudflare 데이터센터(공항 코드: NRT, KIX, HKG …).
+       403 "Request not allowed" 는 워커가 홍콩(HKG)에서 실행될 때만 났다
+       (2026-10-11 실측 HKG 8/8 실패, 일본 4/4 성공). 홍콩은 Anthropic 미지원
+       지역이다. wrangler.toml 의 [placement] 로 실행 위치를 미국 동부에 고정한
+       뒤로는 입구가 HKG 여도 실행은 IAD 에서 되어 15/15 성공했다.
+       실제 실행 위치는 Cloudflare 가 붙이는 cf-placement 헤더(remote-IAD)에 나온다.
+       다시 403 이 나면 이 두 값을 먼저 본다. env 는 요청끼리 공유되므로 복사본에 싣는다. */
+    const colo = (request.cf && request.cf.colo) || '?';
+    cors['X-Colo'] = colo;
+    cors['Access-Control-Expose-Headers'] = 'X-Colo';
+    env = { ...env, __COLO: colo };
     const path = new URL(request.url).pathname.replace(/\/+$/, '') || '/';
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
@@ -480,6 +495,10 @@ async function anthropic(env, prompt, maxTokens) {
         body: JSON.stringify({
           model: env.MODEL || DEFAULT_MODEL,
           max_tokens: maxTokens,
+          /* Haiku 5.5 는 '생각'이 기본으로 켜져 있고, 그 토큰도 과금되며 max_tokens 에
+             포함된다. 번역·요약은 깊은 추론이 필요 없어 effort 를 low 로 둔다.
+             (Haiku 5.5 · Sonnet 5 · Opus 계열 모두 받는 값이다.) */
+          output_config: { effort: env.EFFORT || 'low' },
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -488,7 +507,13 @@ async function anthropic(env, prompt, maxTokens) {
       continue;
     }
     if (res.ok) {
+      console.log('anthropic ok', res.status, 'colo=' + env.__COLO);
       const data = await res.json();
+      /* 안전 분류기가 거절하면 HTTP 200 에 stop_reason 'refusal' 로 온다. 빈 응답을
+         일시 오류로 보면 클라이언트가 40번 재시도하므로 영구 오류로 알린다. */
+      if (data.stop_reason === 'refusal')
+        throw fatalError('AI가 이 내용의 생성을 거절했습니다. 다른 낱말이나 장은 정상적으로 이용하실 수 있습니다.');
+      /* 응답은 thinking 블록으로 시작할 수 있다. 위치가 아니라 종류로 text 만 모은다. */
       return (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
     }
     const raw = (await res.text()).slice(0, 400);
@@ -497,6 +522,8 @@ async function anthropic(env, prompt, maxTokens) {
     const fatal = permanent(res.status, raw);
     if (fatal) throw fatalError(fatal);
     last = `${res.status} ${raw.slice(0, 200)}`;
+    /* wrangler tail 로 원인을 볼 수 있게 남긴다. 키나 사용자 정보는 들어 있지 않다. */
+    console.log('anthropic fail', res.status, 'colo=' + env.__COLO, raw.slice(0, 120).replace(/\s+/g, ' '));
     if (!RETRYABLE.has(res.status)) break;
   }
   if (last.startsWith('403')) {
@@ -564,5 +591,7 @@ ${lines}
 - 교파적 교리 판단은 피하고, 본문에서 관찰되는 쓰임만 기술합니다.
 - 머리말이나 맺음말 없이 요약 본문만 출력합니다. 마크다운 기호는 쓰지 않습니다.`;
 
-  return await anthropic(env, prompt, 900);
+  /* 요약 본문은 짧지만, 생각 토큰도 max_tokens 에 포함되므로 넉넉히 둔다.
+     900 이면 생각하다가 요약을 쓰기 전에 잘릴 수 있다. */
+  return await anthropic(env, prompt, 4000);
 }
