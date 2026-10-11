@@ -70,6 +70,22 @@ select.book{min-width:118px}select.chap{min-width:76px}
 .heb-row.grk .chip{direction:ltr}
 .chip .t{display:block;font-size:10px;color:var(--muted);direction:ltr;font-family:Georgia,serif;font-style:italic;margin-top:1px}
 .chip .g{display:block;font-size:12px;color:var(--gold);margin-top:2px;font-weight:700}.chip.pend .g{color:var(--pending);font-weight:400}
+/* 문법 줄. 본문 읽기를 방해하지 않게 작고 옅게 둔다. 한국어라 좌횡서. */
+/* 긴 꼴('접+전+피엘 분사 남복연계+1공단')이 칩을 옆으로 늘리지 않게, 띄어쓰기와
+   '+' 자리에서만 줄을 바꾼다(keep-all: 낱말 중간에서는 끊지 않음). */
+.chip .m{display:block;font-size:10px;line-height:1.3;color:var(--muted);margin:2px auto 0;direction:ltr;letter-spacing:-.02em;word-break:keep-all;max-width:7.5em}
+.gram-tg{margin-top:8px;background:transparent;border:1px solid var(--line);color:var(--muted);font-family:inherit;font-size:12px;padding:4px 11px;border-radius:12px;cursor:pointer}
+.gram-tg:hover{border-color:var(--gold);color:var(--gold)}
+.gram-tg.on{border-color:var(--gold);color:var(--ink);background:var(--vellum2)}
+/* 패널의 문법 풀이 */
+.mrow{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line)}
+.mrow:last-of-type{border-bottom:0}
+.mh{flex:0 0 auto;min-width:44px;text-align:right;direction:rtl;font-size:19px;font-family:"SBL Hebrew","Frank Ruhl Libre","Times New Roman",serif;color:var(--ink)}
+.mb{flex:1;min-width:0}
+.mk{display:block;font-size:13.5px;color:var(--ink);line-height:1.5}
+.mhint{display:block;font-size:12.5px;color:var(--gold);margin-top:1px}
+.mlang{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 6px;margin-bottom:4px}
+.mcode{font-size:10.5px;color:var(--muted);margin-top:6px;font-family:Consolas,monospace;letter-spacing:.03em}
 .loading{text-align:center;padding:60px 20px;color:var(--muted)}
 .loading .big{font-size:36px;color:var(--gold-lite);font-family:"SBL Greek","Gentium Plus","SBL Hebrew",serif;letter-spacing:.02em;margin-bottom:12px;animation:pulse 1.4s infinite}
 @keyframes pulse{50%{opacity:.4}}
@@ -257,6 +273,7 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <div class="chap"><div class="bk" id="c-bk"></div>
 <h2 class="ctitle"><button id="c-title" type="button" title="이 장의 주석 보기"></button></h2>
 <div class="sub" id="c-sub"></div><div class="cov" id="c-cov"></div>
+<button class="gram-tg" id="c-gram" type="button" hidden></button>
 <div class="cta" id="c-cta" hidden>↑ 장 제목을 누르면 이 장의 주석을 볼 수 있습니다</div></div>
 <div id="text"><div class="loading"><div class="big">Ἐμμαοῦς</div>불러오는 중…</div></div>
 <div class="hint">↑ 원어 단어를 누르면 뜻 · 품사와 함께 <b>그 단어가 쓰인 성경의 모든 구절</b>이 열립니다 (구절을 누르면 이동)</div>
@@ -279,6 +296,8 @@ function trackEvent(name,params){gtag('event',name,params||{});}
   <ul>
     <li>개역한글·KJV·원문을 한 절씩 나란히 비교</li>
     <li>원어 낱말의 스트롱번호·품사·뜻과 상세 사전 정의 확인</li>
+    <li>구약 히브리어 낱말마다 문법 풀이 — 명사의 성·수·연계형, 동사의 어간·시제·인칭,
+      붙어 있는 전치사·관사·대명 접미사까지 (아람어 본문 포함)</li>
     <li>한 낱말이 성경 전체 어디에 나오는지 찾아 그 구절로 바로 이동</li>
     <li>장 제목을 눌러 그 장의 주석을 한국어로 읽기</li>
     <li>낱말이 특정 책 안에서 어떤 의미로 쓰였는지 정리한 AI 요약 보기</li>
@@ -314,7 +333,7 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <div class="scrim" id="scrim"></div>
 <aside class="panel" id="panel"><div class="top"><button class="close" id="close">×</button><div class="heb" id="p-heb"></div><div class="translit" id="p-translit"></div><div><span class="strong" id="p-strong"></span></div></div>
 <div class="body"><div class="row"><div class="lab">뜻</div><div class="val big" id="p-gloss"></div></div>
-<div class="row"><div class="lab">품사 (문맥 형태)</div><div class="val" id="p-morph"></div></div>
+<div class="row"><div class="lab">문법 (이 구절에서의 형태)</div><div class="val" id="p-morph"></div></div>
 <div class="row"><div class="lab" id="p-deflab">상세 정의 (영문)</div><div class="def" id="p-def"></div></div>
 <div class="row"><div class="lab">성경 내 용례</div><div id="p-occ"></div></div></div>
 <div class="foot" id="p-foot"></div></aside>
@@ -329,7 +348,10 @@ function trackEvent(name,params){gtag('event',name,params||{});}
     <li><b>구약 / 신약</b> 탭을 고르고 책과 장을 선택하세요.
       <span class="sub2">구약 히브리어는 오른쪽부터, 신약 헬라어는 왼쪽부터 읽습니다.</span></li>
     <li>각 절 아래 원문 줄에서 <b>원어 낱말을 클릭</b>하세요.
-      <span class="sub2">음역 · 스트롱번호 · 품사 · 한국어 뜻과 상세 정의가 오른쪽에 열립니다.</span></li>
+      <span class="sub2">음역 · 스트롱번호 · 한국어 뜻과 상세 정의가 오른쪽에 열립니다.</span></li>
+    <li>구약 낱말 아래 작은 글씨는 <b>문법</b>입니다. (예: <b>칼 완료 3남단</b>, <b>명 남복연계</b>)
+      <span class="sub2">낱말을 누르면 전치사·관사·접미사까지 하나씩 풀어 "그는 ~했다", "~의 …", "우리의" 같은
+      해석 실마리와 함께 보여 줍니다. 장 제목 아래 버튼으로 켜고 끌 수 있습니다.</span></li>
     <li><b>성경 내 용례</b>에서 책 이름을 누르면 그 책의 용례 구절이 펼쳐지고,
       구절을 누르면 바로 그 본문으로 이동합니다.
       <span class="sub2">한 낱말이 성경 전체에서 어떻게 쓰였는지 따라가며 볼 수 있습니다.</span></li>
@@ -499,7 +521,98 @@ async function loadBook(bi,ch,hlV,hlS){
   chapSel.value=target;
   render(target,hlV,hlS);
 }
-function render(ch,hlV,hlS){
+/* ── 히브리어 문법 풀이 ─────────────────────────────────────────────────
+   w.x 는 OSHB 형태 코드다. 첫 글자는 언어(H 히브리어, A 아람어)이고, 형태소는
+   '/'로 나뉘어 본문 w.h 의 '/'와 하나씩 짝을 이룬다.
+     'HR/Ncfsa' ↔ 'בְּ/רֵאשִׁית'  →  전치사 + 명사 여성 단수 절대형
+   코드표: https://hb.openscriptures.org/parsing/HebrewMorphologyCodes.html
+   히브리어에는 격이 없다. 격이 하던 일을 연계형(상태), 전치사, 목적격 표지
+   את, 어순이 나눠 맡으므로 명사는 성·수·상태를, 동사는 어간·시제·인칭·성·수를
+   보인다. */
+const HM={
+  stemH:{q:['칼','기본형'],N:['니팔','수동·재귀'],p:['피엘','강조·사역'],P:['푸알','피엘의 수동'],h:['히필','사역 — ~하게 하다'],H:['호팔','히필의 수동'],t:['히트파엘','재귀·상호 — 스스로 ~하다'],o:['폴렐','강조'],O:['폴랄','폴렐의 수동'],r:['히트폴렐','재귀'],m:['포엘','강조'],M:['포알','포엘의 수동'],k:['팔렐','강조'],K:['풀랄','팔렐의 수동'],Q:['칼 수동','칼의 수동'],l:['필펠','반복·강조'],L:['폴팔','필펠의 수동'],f:['히트팔펠','재귀'],D:['니트파엘','재귀·수동'],j:['페알랄','강조'],i:['필렐','강조'],u:['호트파알','재귀의 수동'],c:['티펠','사역'],v:['히스타펠','재귀'],w:['니트팔렐','재귀'],y:['니트포엘','재귀'],z:['히트포엘','재귀']},
+  stemA:{q:['페알','기본형'],Q:['페일','페알의 수동'],u:['히트페엘','재귀·수동'],p:['파엘','강조'],P:['이트파알','재귀·수동'],M:['히트파알','재귀·수동'],a:['아펠','사역'],h:['하펠','사역'],s:['사펠','사역'],e:['샤펠','사역'],H:['호팔','사역의 수동'],i:['이트페엘','재귀·수동'],t:['히스타펠','재귀'],v:['이스타펠','재귀'],w:['히트아펠','재귀'],o:['폴렐','강조'],z:['이트포엘','재귀'],r:['히트폴렐','재귀'],f:['히트팔펠','재귀'],b:['헤팔','사역'],c:['티펠','사역'],m:['포엘','강조'],l:['팔펠','반복'],L:['이트팔펠','재귀'],O:['이트폴렐','재귀'],G:['잇타팔','재귀']},
+  conj:{p:['완료','완료','~했다 (완결된 동작)'],q:['바브완료','바브 연속 완료','그리고 ~할 것이다 (앞 동작을 이음)'],i:['미완료','미완료','~할 것이다 · ~하곤 한다'],w:['바브미완','바브 연속 미완료','그리고 ~했다 (이야기 전개)'],h:['권유','권유형','~하자 · ~하리라'],j:['지시','지시형','~하게 하라 · ~하기를'],v:['명령','명령형','~하라'],r:['분사','능동 분사','~하는 (자)'],s:['수동분사','수동 분사','~된 (것)'],a:['부정사절대','부정사 절대형','정녕 ~하다 (강조) · 부사처럼'],c:['부정사연계','부정사 연계형','~함 · ~하기 (전치사와 함께 "~할 때")']},
+  gen:{m:['남','남성'],f:['여','여성'],c:['공','공성'],b:['통','통성 (남녀 모두로 쓰임)']},
+  num:{s:['단','단수'],p:['복','복수'],d:['쌍','쌍수']},
+  st:{a:['','절대형',''],c:['연계','연계형','뒤 낱말과 묶여 "~의 …"로 읽음'],d:['한정','한정형','']},
+  ntype:{c:'보통명사',g:'족속명',p:'고유명사'},
+  npt:{m:'인명',f:'인명(여)',l:'지명',t:'칭호'},
+  atype:{a:['형','형용사'],c:['수','수사(기수)'],g:['족속','족속 형용사'],o:['서수','서수']},
+  ptype:{d:['지시대','지시대명사'],f:['부정대','부정대명사'],i:['의문대','의문대명사'],p:['인칭대','인칭대명사'],r:['관계대','관계대명사']},
+  ttype:{a:['긍정','긍정 불변사',''],d:['관','정관사','그 ~'],e:['권고','권고 불변사','부디 · 이제'],i:['의문','의문 불변사','~냐?'],j:['감탄','감탄사',''],m:['지시','지시 불변사',''],n:['부정','부정어','아니 · ~하지 말라'],o:['목적','목적격 표지 (את)','뒤 낱말이 목적어'],r:['관계','관계사','~하는 (것)']},
+  stype:{d:['방향','방향의 ה','~쪽으로'],h:['첨가ה','첨가된 ה',''],n:['첨가נ','첨가된 נ',''],p:['','대명 접미사','']},
+  who:{'1cs':'나','2ms':'너','2fs':'너','2cs':'너','3ms':'그','3fs':'그녀','3cs':'그','1cp':'우리','2mp':'너희','2fp':'너희','2cp':'너희','3mp':'그들','3fp':'그녀들','3cp':'그들'}
+};
+/* 받침이 있으면 a, 없으면 b — '그들은' / '그는' */
+function josa(w,a,b){const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c<11172&&c%28?a:b;}
+/* p·g·n 세 글자('3ms')를 '3남단' / '3인칭 남성 단수'로 */
+function hPgn(p,g,n){
+  const G=HM.gen[g],N=HM.num[n];
+  return {s:(p||'')+(G?G[0]:'')+(N?N[0]:''),
+          l:[p?p+'인칭':'',G?G[1]:'',N?N[1]:''].filter(Boolean).join(' ')};
+}
+/* 형태소 하나 → {s:칩용 짧은 꼴, l:패널용 풀이, k:품사 이름, h:해석 실마리} */
+function hSeg(seg,lang){
+  const c=seg.charAt(0),a=seg.slice(1);
+  switch(c){
+    case 'V':{
+      const S=(lang==='A'?HM.stemA:HM.stemH)[a.charAt(0)]||['?',''],J=HM.conj[a.charAt(1)]||['?','?',''];
+      const t=a.slice(2);let s=S[0]+' '+J[0],l=[S[0]+'('+S[1]+')',J[1]],h=J[2];
+      if('rs'.includes(a.charAt(1))){const q=hPgn('',t.charAt(0),t.charAt(1)),st=HM.st[t.charAt(2)];
+        if(q.s)s+=' '+q.s;if(q.l)l.push(q.l);if(st&&st[0]){s+=st[0];l.push(st[1]);}}
+      else if(t){const q=hPgn(t.charAt(0),t.charAt(1),t.charAt(2));s+=' '+q.s;l.push(q.l);
+        /* 주어를 실마리에 넣는다: '~했다' → '그는 ~했다', '~하라' → '너는 ~하라' */
+        const who=HM.who[t.slice(0,3)];if(who)h=h.replace('~',who+josa(who,'은','는')+' ~');}
+      return {k:'동사',s,l:l.join(' · '),h};}
+    case 'N':{
+      if(a.charAt(0)==='p')return {k:'고유명사',s:'고유',l:'고유명사'+(HM.npt[a.charAt(1)]?' ('+HM.npt[a.charAt(1)]+')':''),h:''};
+      const q=hPgn('',a.charAt(1),a.charAt(2)),st=HM.st[a.charAt(3)]||['','',''];
+      return {k:HM.ntype[a.charAt(0)]||'명사',s:(a.charAt(0)==='g'?'족속 ':'명 ')+q.s+st[0],
+              l:[HM.ntype[a.charAt(0)]||'명사',q.l,st[1]].filter(Boolean).join(' · '),h:st[2]};}
+    case 'A':{
+      const T=HM.atype[a.charAt(0)]||['형','형용사'],q=hPgn('',a.charAt(1),a.charAt(2)),st=HM.st[a.charAt(3)]||['','',''];
+      return {k:T[1],s:T[0]+' '+q.s+st[0],l:[T[1],q.l,st[1]].filter(Boolean).join(' · '),h:st[2]};}
+    case 'P':{
+      const T=HM.ptype[a.charAt(0)]||['대','대명사'],q=hPgn(a.charAt(1),a.charAt(2),a.charAt(3));
+      return {k:T[1],s:T[0]+(q.s?' '+q.s:''),l:[T[1],q.l].filter(Boolean).join(' · '),h:HM.who[a.slice(1,4)]||''};}
+    case 'S':{
+      const T=HM.stype[a.charAt(0)]||['','접미사',''];
+      if(a.charAt(0)!=='p')return {k:T[1],s:T[0],l:T[1],h:T[2]};
+      const q=hPgn(a.charAt(1),a.charAt(2),a.charAt(3)),who=HM.who[a.slice(1,4)];
+      return {k:'대명 접미사',s:q.s,l:'대명 접미사 · '+q.l,h:who?who+'의 · '+who+josa(who,'을','를')+' (명사 뒤면 소유, 동사 뒤면 목적어)':''};}
+    case 'T':{const T=HM.ttype[a.charAt(0)]||['불변','불변사',''];return {k:T[1],s:T[0],l:T[1],h:T[2]};}
+    case 'R':return a.charAt(0)==='d'?{k:'전치사',s:'전관',l:'전치사 + 정관사',h:'그 ~에(게)'}:{k:'전치사',s:'전',l:'전치사',h:''};
+    case 'C':return {k:'접속사',s:'접',l:'접속사',h:'그리고 · 그러나'};
+    case 'D':return {k:'부사',s:'부',l:'부사',h:''};
+  }
+  return {k:'?',s:seg,l:seg,h:''};
+}
+const H_CACHE=new Map();
+function hParse(x){
+  if(H_CACHE.has(x))return H_CACHE.get(x);
+  const lang=x.charAt(0),raw=x.slice(1).split('/'),segs=raw.map(s=>hSeg(s,lang));
+  /* 바브 연속형(וַיֹּאמֶר)의 바브는 동사와 한 묶음이다. '그리고'는 동사 풀이에
+     이미 들어 있으므로 바브를 따로 '그리고'로 풀면 두 번 읽게 된다. */
+  raw.forEach((s,i)=>{const n=raw[i+1]||'';
+    if(s==='C'&&n.charAt(0)==='V'&&'wq'.includes(n.charAt(2)))
+      segs[i]={k:'접속사',s:'접',l:'바브 연속의 바브',h:'뒤 동사와 한 묶음 — 동사 풀이의 "그리고"가 이것'};});
+  /* 칩: 접두(전·접·관)는 +로 앞에, 대명 접미사는 +로 뒤에 붙인다 */
+  const r={lang,segs,s:segs.map(g=>g.s).filter(Boolean).join('+')};
+  H_CACHE.set(x,r);return r;
+}
+/* 패널: 형태소마다 한 줄. 본문 h 의 '/' 조각과 코드 조각 수가 같으면 원문도 나란히 둔다. */
+function hDetail(w){
+  const P=hParse(w.x),parts=String(w.h||'').split('/');
+  const same=parts.length===P.segs.length;
+  const rows=P.segs.map((g,i)=>
+    `<div class="mrow">${same?`<span class="mh">${esc(parts[i])}</span>`:''}<div class="mb"><span class="mk">${esc(g.l)}</span>${g.h?`<span class="mhint">${esc(g.h)}</span>`:''}</div></div>`).join('');
+  return (P.lang==='A'?'<div class="mlang">아람어</div>':'')+rows+`<div class="mcode">${esc(w.x)}</div>`;
+}
+/* 문법 줄 표시 여부. 칩이 길어지는 게 싫은 사람을 위해 끌 수 있게 하고, 기억해 둔다. */
+let GRAM=true;try{GRAM=localStorage.getItem('miqra.gram')!=='0';}catch(e){}
+
+function render(ch,hlV,hlS,quiet){
   const m=MANI[curBi],C=String(ch);
   document.getElementById('c-bk').textContent=CUR.osis.toUpperCase();
   document.getElementById('c-title').textContent=m.name+' '+ch+'장';
@@ -508,20 +621,29 @@ function render(ch,hlV,hlS){
   let tot=0,cov=0;Object.values(heb).forEach(ws=>ws.forEach(w=>{tot++;if((LEX[w.s]||{}).ko)cov++;}));
   const korMiss=!CUR.kor[C];
   document.getElementById('c-cov').innerHTML=`한국어 gloss 커버 <b>${tot?Math.round(cov/tot*100):0}%</b>`+(korMiss?' · 개역한글 준비 중':'');
+  const gt=document.getElementById('c-gram');
+  gt.hidden=curTest!=='ot';
+  gt.classList.toggle('on',GRAM);
+  gt.textContent=GRAM?'문법 표시 켜짐 · 끄기':'문법 표시 꺼짐 · 켜기';
+  gt.onclick=()=>{GRAM=!GRAM;try{localStorage.setItem('miqra.gram',GRAM?'1':'0');}catch(e){}
+    trackEvent('gram_toggle',{on:GRAM});const y=window.pageYOffset;render(ch,null,null,true);window.scrollTo(0,y);};
   text.innerHTML='';
   const verses=korMiss?Object.keys(heb):Object.keys(kor);
   verses.forEach(v=>{
     const words=heb[v]||[];
     const chips=words.map((w,i)=>{const L=LEX[w.s]||{};const pend=!L.ko;
       const hit=(hlS&&w.s===hlS)?' hl':'';
-      return `<button class="chip${pend?' pend':''}${hit}" data-v="${v}" data-i="${i}"><span class="h">${w.h}</span><span class="t">${L.t||''}</span><span class="g">${L.ko||'·'}</span></button>`;}).join('');
+      /* 문법 줄: 히브리어(x 있음)만. 헬라어는 아직 옛 m 을 패널에만 보인다. */
+      const gm=GRAM&&w.x?`<span class="m">${esc(hParse(w.x).s).replace(/\+/g,'+<wbr>')}</span>`:'';
+      return `<button class="chip${pend?' pend':''}${hit}" data-v="${v}" data-i="${i}"><span class="h">${w.h}</span><span class="t">${L.t||''}</span><span class="g">${L.ko||'·'}</span>${gm}</button>`;}).join('');
     const korLine=kor[v]!=null?`<span class="kor">${kor[v]}</span>`:`<span class="kor na">개역한글 준비 중 (소스 보완 필요)</span>`;
     text.insertAdjacentHTML('beforeend',`<div class="verse" id="v-${v}"><span class="vnum">${v}</span>${korLine}<div class="kjv">${kjv[v]||''}</div>${words.length?`<div class="heb-row${curTest==='nt'?' grk':''}">${chips}</div>`:''}</div>`);
   });
   if(hlV!=null)spotlight(hlV);
   document.getElementById('c-cta').hidden=!SUMAPI;
   document.title=m.name+' '+ch+'장 · 엠마오 원어대조성경';
-  track('/'+encodeURIComponent(m.name)+'/'+ch,m.name+' '+ch+'장');
+  /* 문법 켜고 끄기로 다시 그릴 때는 페이지 조회로 세지 않는다 */
+  if(!quiet)track('/'+encodeURIComponent(m.name)+'/'+ch,m.name+' '+ch+'장');
 }
 function spotlight(v){
   const el=document.getElementById('v-'+v);if(!el)return;
@@ -538,7 +660,7 @@ function openWord(ch,v,i){const w=CUR.heb[String(ch)][v][i],L=LEX[w.s]||{};
   pheb.classList.toggle('grk',w.s.charAt(0)==='G');
   document.getElementById('p-translit').textContent=L.t||'';
   document.getElementById('p-strong').textContent=w.s;document.getElementById('p-gloss').textContent=L.ko||'번역 준비 중';
-  document.getElementById('p-morph').textContent=w.m||'—';
+  document.getElementById('p-morph').innerHTML=w.x?hDetail(w):esc(w.m||'—');
   const def=document.getElementById('p-def');
   /* 사전이 둘이다. d = 구약 BDB(1906) / 신약 Abbott-Smith, sd = 스트롱 히브리어사전.
      둘 다 퍼블릭도메인이라 나란히 실어도 된다. */
