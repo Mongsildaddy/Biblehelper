@@ -126,6 +126,54 @@ select.book{min-width:118px}select.chap{min-width:76px}
 /* ── 후원 ─────────────────────────────────────────────────────────────── */
 .give-btn{background:transparent;color:var(--gold-lite);border:1px solid #6d6144;padding:6px 12px;border-radius:3px;font-family:inherit;font-size:12px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .give-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+/* ── 문법 안내 (원어 문법 요약) ─────────────────────────────────────────
+   원어 문법을 모르는 분이 칩 아래 '칼 완료 3남단' 같은 표시를 읽을 수 있게,
+   구약은 히브리어, 신약은 헬라어 문법을 한 창에 요약한다. 정적 HTML 이라
+   검색엔진에도 읽힌다. */
+.gram-btn{background:var(--gold);color:var(--ink);border:1px solid var(--gold);padding:6px 12px;border-radius:3px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.gram-btn:hover{background:var(--gold-lite);border-color:var(--gold-lite)}
+.modal .sheet.wide{width:800px;max-height:90vh;padding:0}
+.gm-head{position:sticky;top:0;z-index:2;background:var(--vellum);padding:22px 30px 0;border-bottom:1px solid var(--line)}
+.gm-head h2{margin-right:36px}
+.gm-tabs{display:flex;gap:4px;margin-top:12px}
+.gm-tabs button{background:transparent;border:1px solid var(--line);border-bottom:0;color:var(--muted);font-family:inherit;font-size:13.5px;padding:7px 16px;border-radius:4px 4px 0 0;cursor:pointer}
+.gm-tabs button.on{background:var(--ink);color:var(--vellum);border-color:var(--ink);font-weight:700}
+.gm-toc{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 12px;border-top:2px solid var(--ink)}
+.gm-toc button{background:transparent;border:1px solid var(--line);color:var(--ink2);font-family:inherit;font-size:12px;padding:3px 10px;border-radius:12px;cursor:pointer}
+.gm-toc button:hover{border-color:var(--gold);color:var(--gold)}
+.gm-body{padding:6px 30px 28px}
+.gm-doc h3{font-size:16.5px;color:var(--ink);margin:28px 0 8px;scroll-margin-top:150px}
+.gm-doc h3 .n{color:var(--gold);margin-right:6px}
+.gm-doc h4{font-size:14px;color:var(--gold);margin:16px 0 4px}
+/* .modal li / .modal li b 규칙보다 앞서도록 .modal 을 붙인다 */
+.modal .gm-doc p,.modal .gm-doc li{font-size:14px;line-height:1.85;color:var(--ink2)}
+.gm-doc p{margin:6px 0}
+.modal .gm-doc ul{margin:4px 0 8px 18px}
+.modal .gm-doc li{margin-bottom:4px}
+.modal .gm-doc b,.modal .gm-doc li b{color:var(--ink)}
+.gm-doc .he{font-family:"SBL Hebrew","Frank Ruhl Libre","Times New Roman",serif;font-size:1.3em;direction:rtl;unicode-bidi:isolate;color:var(--ink)}
+.gm-doc .gr{font-family:"Gentium Plus",Georgia,"Times New Roman",serif;font-size:1.08em;color:var(--ink)}
+.gm-doc .tw{overflow-x:auto;margin:8px 0 12px}
+.gm-doc table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:440px}
+.gm-doc th,.gm-doc td{border-bottom:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top;line-height:1.6}
+.gm-doc th{background:var(--vellum2);color:var(--ink);font-size:12.5px;font-weight:700;white-space:nowrap}
+.gm-doc td.c{white-space:nowrap}
+.gm-doc .tip{background:var(--vellum2);border-left:3px solid var(--gold);padding:10px 14px;font-size:13.5px;color:var(--ink2);line-height:1.8;margin:10px 0;border-radius:3px}
+.gm-doc .lead2{font-size:13.5px;color:var(--muted);line-height:1.8;margin-top:14px}
+/* 휴대폰: 목차를 한 줄로 두고 옆으로 밀게 해서 고정 머리가 화면을 덜 먹게 하고,
+   표는 최소 폭을 풀어 칸 안에서 줄을 바꾸게 한다(옆으로 밀지 않아도 다 보이게). */
+@media(max-width:560px){
+  .gm-head{padding:18px 18px 0}.gm-body{padding:4px 18px 22px}
+  .gm-head .lead{display:none}
+  .gm-tabs button{padding:7px 11px;font-size:13px}
+  .gm-toc{flex-wrap:nowrap;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+  .gm-toc::-webkit-scrollbar{display:none}
+  .gm-toc button{flex:0 0 auto}
+  .gm-doc h3{scroll-margin-top:120px}
+  .gm-doc table{min-width:0;font-size:12.5px}
+  .gm-doc th,.gm-doc td{padding:6px 6px}
+  .gm-doc td.c{white-space:normal}
+}
 .give{margin:34px 0 0;padding:22px 24px;border:1px solid var(--line);background:var(--vellum2);border-radius:3px}
 .give h3{font-size:15px;letter-spacing:.02em;margin-bottom:8px}
 .give p{font-size:13.5px;color:var(--ink2);line-height:1.75}
@@ -261,6 +309,7 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 <div class="brand"><b>Ἐ <i>엠마오</i></b><span>Emmaus · 원어대조성경 (신구약)</span></div>
 <div class="controls"><div class="tabs"><button class="on" id="tab-ot">구약</button><button id="tab-nt">신약</button></div>
 <select id="book" class="book"></select><select id="chap" class="chap"></select>
+<button class="gram-btn" id="gram-btn" type="button" title="히브리어·헬라어 문법 요약">문법 안내</button>
 <button class="give-btn" id="give-btn" hidden>♡ 후원</button></div></div></header>
 <div class="wrap">
 <section class="intro">
@@ -351,7 +400,8 @@ function trackEvent(name,params){gtag('event',name,params||{});}
       <span class="sub2">음역 · 스트롱번호 · 한국어 뜻과 상세 정의가 오른쪽에 열립니다.</span></li>
     <li>구약 낱말 아래 작은 글씨는 <b>문법</b>입니다. (예: <b>칼 완료 3남단</b>, <b>명 남복연계</b>)
       <span class="sub2">낱말을 누르면 전치사·관사·접미사까지 하나씩 풀어 "그는 ~했다", "~의 …", "우리의" 같은
-      해석 실마리와 함께 보여 줍니다. 장 제목 아래 버튼으로 켜고 끌 수 있습니다.</span></li>
+      해석 실마리와 함께 보여 줍니다. 장 제목 아래 버튼으로 켜고 끌 수 있습니다.
+      원어 문법이 처음이시면 오른쪽 위 <b>문법 안내</b>에서 히브리어·헬라어 문법 요약을 보세요.</span></li>
     <li><b>성경 내 용례</b>에서 책 이름을 누르면 그 책의 용례 구절이 펼쳐지고,
       구절을 누르면 바로 그 본문으로 이동합니다.
       <span class="sub2">한 낱말이 성경 전체에서 어떻게 쓰였는지 따라가며 볼 수 있습니다.</span></li>
@@ -393,6 +443,330 @@ function trackEvent(name,params){gtag('event',name,params||{});}
 </aside>
 
 <!-- 후원 안내 -->
+<div class="modal" id="gram-modal" role="dialog" aria-modal="true" aria-labelledby="gram-h">
+<div class="sheet wide">
+ <div class="gm-head">
+  <button class="x" id="gram-x" aria-label="닫기">×</button>
+  <h2 id="gram-h">원어 문법 안내</h2>
+  <div class="lead">원어를 처음 보시는 분도 낱말 아래 문법 표시를 읽을 수 있도록, 꼭 필요한 것만 추렸습니다.</div>
+  <div class="gm-tabs" role="tablist">
+   <button type="button" data-g="heb" role="tab">히브리어 · 구약</button>
+   <button type="button" data-g="grk" role="tab">헬라어 · 신약</button>
+  </div>
+  <nav class="gm-toc" id="gm-toc" aria-label="목차"></nav>
+ </div>
+ <div class="gm-body">
+
+ <!-- ════════════════ 히브리어 ════════════════ -->
+ <div class="gm-doc" data-g="heb">
+  <p class="lead2">구약은 대부분 히브리어로 쓰였고, 다니엘 2:4하–7:28, 에스라 4:8–6:18과 7:12–26,
+  예레미야 10:11, 창세기 31:47의 두 낱말은 아람어입니다. 아람어는 히브리어와 가까운 말이라
+  아래 내용이 대부분 그대로 통합니다(마지막 장 참고).</p>
+
+  <h3 id="gh-1" data-t="문자·읽는 방향"><span class="n">1</span>문자와 읽는 방향</h3>
+  <ul>
+   <li><b>오른쪽에서 왼쪽으로</b> 읽습니다. 이 사이트의 원문 줄도 오른쪽 끝에서 시작합니다.</li>
+   <li>글자는 <b>자음 22개</b>뿐입니다. 모음은 글자 위아래에 찍힌 점과 선(<b>니쿠드</b>)으로
+     나타내는데, 7~10세기 마소라 학자들이 읽는 법을 지키려고 덧붙인 것입니다.</li>
+   <li>다섯 글자는 낱말 끝에 올 때 모양이 바뀝니다(왼쪽이 보통 꼴, 오른쪽이 끝 꼴):
+     <span class="he">כ</span> → <span class="he">ך</span>, <span class="he">מ</span> → <span class="he">ם</span>,
+     <span class="he">נ</span> → <span class="he">ן</span>, <span class="he">פ</span> → <span class="he">ף</span>,
+     <span class="he">צ</span> → <span class="he">ץ</span></li>
+   <li>그 밖의 작은 기호(<b>악센트</b>)는 강세 자리와 문장 나눔을 보여 줍니다.
+     창세기 1:1의 <span class="he">אֱלֹהִ֑ים</span> 아래 작은 꺾쇠(<b>아트나</b>)는 절의 가운데 쉼이고,
+     절 끝의 <span class="he">׃</span>(<b>소프 파숙</b>)는 마침표 구실을 합니다.</li>
+   <li>대문자가 없어서 고유명사도 생김새로는 구별되지 않습니다. 낱말을 눌러 뜻을 확인하세요.</li>
+  </ul>
+
+  <h3 id="gh-2" data-t="낱말의 짜임"><span class="n">2</span>낱말의 짜임 — 세 자음 어근과 붙는 조각</h3>
+  <p>대부분의 낱말은 <b>세 자음 어근</b>에 모음과 앞뒤 조각을 붙여 만듭니다.
+  <span class="he">מ־ל־ך</span>(다스림)에서 <span class="he">מֶלֶךְ</span> 왕,
+  <span class="he">מָלַךְ</span> 다스렸다, <span class="he">מַלְכָּה</span> 왕비,
+  <span class="he">מַמְלָכָה</span> 나라가 나옵니다. 스트롱번호는 이 뿌리 낱말 단위로 붙어 있습니다.</p>
+  <h4>앞에 붙는 한 글자 (접두)</h4>
+  <div class="tw"><table>
+   <tr><th>글자</th><th>뜻</th><th>예</th></tr>
+   <tr><td class="he">וְ</td><td>그리고 · 그러나</td><td><span class="he">וְ/אֵת</span> 그리고 (목적어)</td></tr>
+   <tr><td class="he">הַ</td><td>그 (정관사)</td><td><span class="he">הַ/שָּׁמַיִם</span> 그 하늘</td></tr>
+   <tr><td class="he">בְּ</td><td>~안에 · ~으로 · ~때에</td><td><span class="he">בְּ/רֵאשִׁית</span> 처음에</td></tr>
+   <tr><td class="he">כְּ</td><td>~처럼 · ~만큼</td><td></td></tr>
+   <tr><td class="he">לְ</td><td>~에게 · ~을 위해 · ~하려고</td><td><span class="he">לֵ/אמֹר</span> 말하기를</td></tr>
+   <tr><td class="he">מִ</td><td>~에서부터 · ~보다</td><td>(<span class="he">מִן</span>이 줄어든 꼴)</td></tr>
+  </table></div>
+  <p>뒤에는 복수 어미(남성 <span class="he">ִים־</span>, 여성 <span class="he">וֹת־</span>), 여성 어미
+  (<span class="he">ָה־</span>, <span class="he">ת־</span>), 그리고 "나의·그의·우리의" 같은
+  <b>대명 접미사</b>(6장)가 붙습니다.</p>
+  <div class="tip">이 사이트 원문에 보이는 <b>/</b> 표시가 바로 이 조각의 경계입니다.
+  <span class="he">בְּ/רֵאשִׁית</span> = <span class="he">בְּ</span>(~에) + <span class="he">רֵאשִׁית</span>(처음).
+  낱말을 누르면 조각마다 따로 풀어 보여 드립니다.</div>
+
+  <h3 id="gh-3" data-t="어순"><span class="n">3</span>어순 — 동사가 먼저</h3>
+  <ul>
+   <li>이야기 문장의 기본 순서는 <b>동사 → 주어 → 목적어</b>입니다. 한국어(주어 → 목적어 → 동사)와
+     반대여서, 처음에는 뒤에서부터 맞춰 읽는 연습이 필요합니다.<br>
+     <span class="he">בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם</span> → 창조하셨다 / 하나님이 / (목적) 그 하늘을</li>
+   <li>동사가 아닌 낱말이 맨 앞에 나오면 대개 <b>강조나 대조, 장면 전환</b>입니다.
+     창세기 3:1 <span class="he">וְהַנָּחָשׁ הָיָה עָרוּם</span> "그런데 <b>뱀은</b> … 간교하니라"는
+     주어가 앞에 나와 새 등장인물을 소개합니다.</li>
+   <li><b>"~이다"가 없는 문장</b>(명사문)이 많습니다. 현재의 "~이다"는 보통 생략합니다.
+     신명기 6:4 <span class="he">יְהוָה אֶחָד</span> "여호와는 하나이시다".</li>
+   <li><b>형용사는 명사 뒤</b>에서 꾸미고 성·수·한정(관사)을 명사와 맞춥니다.
+     <span class="he">הָאִישׁ הַטּוֹב</span> "그 선한 사람" / 관사 없이 서술 자리에 오면
+     <span class="he">הָאִישׁ טוֹב</span> "그 사람은 선하다".</li>
+   <li><span class="he">אֵת</span>는 <b>정해진 목적어 앞에 붙는 표지</b>로, 따로 번역하지 않습니다.
+     이 사이트에는 "목적"으로 표시됩니다.</li>
+  </ul>
+  <div class="tip">히브리어에는 헬라어 같은 <b>격(주격·목적격…)이 없습니다.</b> 누가 주어이고 무엇이
+  목적어인지는 어순, 전치사, 목적 표지 <span class="he">אֵת</span>, 그리고 다음 장의 <b>연계형</b>이 알려 줍니다.</div>
+
+  <h3 id="gh-4" data-t="명사"><span class="n">4</span>명사 — 성 · 수 · 상태</h3>
+  <h4>성 (남성 · 여성)</h4>
+  <p>모든 명사에 문법상 성이 있습니다. 여성은 흔히 <span class="he">ָה־</span>나 <span class="he">ת־</span>로 끝납니다.
+  <span class="he">אֶרֶץ</span>(땅)처럼 남녀 양쪽으로 쓰이는 명사는 이 사이트에서 <b>통성</b>(통)으로 표시합니다.</p>
+  <h4>수 (단수 · 복수 · 쌍수)</h4>
+  <p>복수는 남성 <span class="he">ִים־</span>, 여성 <span class="he">וֹת־</span>로 끝나고, 짝을 이루는 것에는
+  <b>쌍수</b> <span class="he">ַיִם־</span>를 씁니다(<span class="he">יָדַיִם</span> 두 손).</p>
+  <div class="tip"><span class="he">אֱלֹהִים</span>(하나님)은 꼴이 복수(명 남복)인데, 창세기 1:1의 동사
+  <span class="he">בָּרָא</span>는 단수(3남단)입니다. 동사가 단수라는 데서 한 분 하나님을 가리킨다는 것을 알 수 있습니다.</div>
+  <h4>상태 — 절대형과 연계형</h4>
+  <p>이 사이트 해석에서 가장 자주 쓰실 개념입니다. 명사 둘이 붙어 <b>"A의 B"</b>가 될 때, 앞 낱말(B)은
+  모양이 짧아진 <b>연계형</b>이 되고 뒤 낱말(A)은 보통 꼴(<b>절대형</b>)으로 남습니다.</p>
+  <ul>
+   <li><span class="he">דָּבָר</span> 말씀 → <span class="he">דְּבַר יְהוָה</span> <b>여호와의</b> 말씀</li>
+   <li>창세기 1:2 <span class="he">רוּחַ אֱלֹהִים</span> <b>하나님의</b> 영 — <span class="he">רוּחַ</span>가 연계형입니다.</li>
+   <li>연결된 묶음 전체에서 관사는 <b>맨 끝 낱말에만</b> 붙습니다:
+     <span class="he">דְּבַר הַמֶּלֶךְ</span> "그 왕의 말".</li>
+  </ul>
+  <p>낱말 아래에 <b>연계</b>라고 보이면 "뒤 낱말과 묶어 '~의 …'로 읽으라"는 뜻입니다.
+  관사가 붙었거나, 고유명사이거나, 대명 접미사가 붙은 명사는 "정해진(한정된)" 명사로 봅니다.</p>
+
+  <h3 id="gh-5" data-t="동사"><span class="n">5</span>동사 — 어간 · 시제 · 인칭</h3>
+  <p>동사 하나에 <b>어간(동작의 성격) + 시제(동작을 보는 방식) + 인칭·성·수(주어)</b>가 다 들어 있습니다.
+  그래서 동사 하나가 "그가 ~했다"처럼 주어까지 포함한 문장 하나가 되기도 합니다.</p>
+  <h4>어간 — 같은 뿌리, 다른 동작</h4>
+  <div class="tw"><table>
+   <tr><th>어간</th><th>성격</th><th>예</th></tr>
+   <tr><td class="c"><b>칼</b></td><td>기본</td><td><span class="he">שָׁבַר</span> 깨뜨렸다 · <span class="he">מָלַךְ</span> 다스렸다</td></tr>
+   <tr><td class="c"><b>니팔</b></td><td>칼의 수동 · 재귀</td><td><span class="he">נִשְׁבַּר</span> 깨졌다</td></tr>
+   <tr><td class="c"><b>피엘</b></td><td>강조 · 반복 · 사역</td><td><span class="he">שִׁבֵּר</span> 산산이 깨뜨렸다</td></tr>
+   <tr><td class="c"><b>푸알</b></td><td>피엘의 수동</td><td>산산이 깨졌다</td></tr>
+   <tr><td class="c"><b>히필</b></td><td>사역 — "~하게 하다"</td><td><span class="he">הִמְלִיךְ</span> 왕으로 세웠다</td></tr>
+   <tr><td class="c"><b>호팔</b></td><td>히필의 수동</td><td><span class="he">הָמְלַךְ</span> 왕으로 세워졌다 (단 9:1)</td></tr>
+   <tr><td class="c"><b>히트파엘</b></td><td>재귀 · 상호 — "스스로 ~하다"</td><td><span class="he">וַיִּתְהַלֵּךְ</span> (하나님과) 동행하였다 (창 5:22)</td></tr>
+  </table></div>
+  <p>그 밖에 폴렐·필펠 같은 드문 어간도 나오는데, 낱말을 누르면 성격을 함께 보여 드립니다.</p>
+  <h4>시제 — 언제보다 "어떻게"</h4>
+  <div class="tw"><table>
+   <tr><th>표시</th><th>뜻</th><th>읽는 법</th></tr>
+   <tr><td class="c"><b>완료</b></td><td>끝난 동작으로 봄</td><td>대개 "~했다"</td></tr>
+   <tr><td class="c"><b>미완료</b></td><td>진행 · 반복 · 앞으로 일어날 일</td><td>"~할 것이다", "~하곤 한다"</td></tr>
+   <tr><td class="c"><b>바브미완</b><br>(바브 연속 미완료)</td><td>이야기를 이어 가는 꼴. 구약 서술문의 뼈대</td><td>"그리고 ~했다" — <span class="he">וַיֹּאמֶר</span> 그리고 말씀하셨다</td></tr>
+   <tr><td class="c"><b>바브완료</b><br>(바브 연속 완료)</td><td>예언 · 지시를 이어 가는 꼴</td><td>"그리고 ~할 것이다"</td></tr>
+   <tr><td class="c"><b>명령</b></td><td>2인칭에게 명령</td><td>"~하라" — <span class="he">שְׁמַע</span> 들으라 (신 6:4)</td></tr>
+   <tr><td class="c"><b>지시</b></td><td>3인칭에 대한 바람·명령</td><td>"~하게 하라", "~있으라" — <span class="he">יְהִי אוֹר</span> 빛이 있으라 (창 1:3)</td></tr>
+   <tr><td class="c"><b>권유</b></td><td>1인칭의 다짐·제안</td><td>"~하자" — <span class="he">נֵרְדָה</span> 우리가 내려가자 (창 11:7)</td></tr>
+   <tr><td class="c"><b>분사</b></td><td>동사에서 나온 형용사·명사</td><td>"~하는 (자)", 지금 진행 중인 일</td></tr>
+   <tr><td class="c"><b>부정사연계</b></td><td>"~하기", 전치사와 함께 자주 씀</td><td><span class="he">לֵאמֹר</span> "말하기를", <span class="he">בְּ</span>+ "~할 때"</td></tr>
+   <tr><td class="c"><b>부정사절대</b></td><td>같은 동사 앞에서 강조</td><td><span class="he">מוֹת תָּמוּת</span> "반드시 죽으리라" (창 2:17)</td></tr>
+  </table></div>
+  <div class="tip"><b>바브미완</b>의 맨 앞 <span class="he">וַ</span>는 동사와 한 묶음입니다. 동사 풀이에 이미
+  "그리고"가 들어 있으니 따로 한 번 더 "그리고"를 붙여 읽지 마세요.</div>
+  <h4>인칭 · 성 · 수 — 주어가 동사 안에</h4>
+  <p><b>3남단</b> = 3인칭 남성 단수 "그가", <b>2남단</b> "너(남)가", <b>1공단</b> "내가"(1인칭은 남녀 구별이 없어
+  <b>공성</b>), <b>3공복</b> "그들이". 주어 낱말이 따로 없어도 동사만으로 누가 했는지 알 수 있습니다.</p>
+
+  <h3 id="gh-6" data-t="대명 접미사"><span class="n">6</span>대명 접미사 — 나의 · 그의 · 우리의</h3>
+  <p>낱말 끝에 붙는 대명사입니다. <b>명사 뒤면 소유("~의")</b>, <b>동사 뒤면 목적어("~를")</b>,
+  <b>전치사 뒤면 "~에게"</b>가 됩니다.</p>
+  <div class="tw"><table>
+   <tr><th>표시</th><th>접미사</th><th>뜻</th><th>예</th></tr>
+   <tr><td class="c">1공단</td><td class="he">ִי־</td><td>나의 · 나를</td><td><span class="he">לִ/י</span> 나에게</td></tr>
+   <tr><td class="c">2남단</td><td class="he">ְךָ־</td><td>너의 · 너를</td><td><span class="he">אֱלֹהֶי/ךָ</span> 네 하나님</td></tr>
+   <tr><td class="c">2여단</td><td class="he">ֵךְ־</td><td>너의 (여성에게)</td><td></td></tr>
+   <tr><td class="c">3남단</td><td class="he">וֹ־</td><td>그의 · 그를</td><td><span class="he">שְׁמ/וֹ</span> 그의 이름</td></tr>
+   <tr><td class="c">3여단</td><td class="he">ָהּ־</td><td>그녀의 · 그녀를</td><td></td></tr>
+   <tr><td class="c">1공복</td><td class="he">נוּ־</td><td>우리의 · 우리를</td><td><span class="he">אֱלֹהֵי/נוּ</span> 우리 하나님 (신 6:4)</td></tr>
+   <tr><td class="c">2남복</td><td class="he">כֶם־</td><td>너희의 · 너희를</td><td></td></tr>
+   <tr><td class="c">3남복</td><td class="he">ָם־ · הֶם־</td><td>그들의 · 그들을</td><td></td></tr>
+  </table></div>
+  <p>접미사가 붙으면 앞 낱말은 대개 <b>연계형</b>이 됩니다. 그래서 <span class="he">אֱלֹהֵינוּ</span>가
+  "명 남복연계+1공복"으로 표시됩니다.</p>
+
+  <h3 id="gh-7" data-t="이 사이트 표시"><span class="n">7</span>이 사이트의 문법 표시 읽는 법</h3>
+  <p>구약 낱말 아래 작은 글씨가 문법입니다(장 제목 아래 버튼으로 켜고 끌 수 있습니다).
+  붙은 조각은 <b>+</b>로 이어서 보여 줍니다: <b>전+명 여단</b> = 전치사 + 명사 여성 단수.</p>
+  <div class="tw"><table>
+   <tr><th>표시</th><th>뜻</th><th>표시</th><th>뜻</th></tr>
+   <tr><td>명</td><td>명사</td><td>전</td><td>전치사</td></tr>
+   <tr><td>고유</td><td>고유명사</td><td>접</td><td>접속사 (ו 등)</td></tr>
+   <tr><td>족속</td><td>족속 이름 (~사람)</td><td>관</td><td>정관사 (ה)</td></tr>
+   <tr><td>형 / 수 / 서수</td><td>형용사 / 수사 / 서수</td><td>목적</td><td>목적격 표지 (את)</td></tr>
+   <tr><td>인칭대 · 지시대</td><td>인칭·지시 대명사</td><td>부정 · 의문 · 관계</td><td>부정어(아니) · 의문 · 관계사(~하는)</td></tr>
+   <tr><td>남 · 여 · 공 · 통</td><td>남성 · 여성 · 공성(1인칭 등 구별 없음) · 통성(남녀 모두)</td><td>단 · 복 · 쌍</td><td>단수 · 복수 · 쌍수</td></tr>
+   <tr><td>연계</td><td>연계형 ("~의"로 이어짐)</td><td>한정</td><td>한정형 (아람어, "그 ~")</td></tr>
+  </table></div>
+  <p>동사는 <b>[어간] [시제] [인칭·성·수]</b> 순서입니다. <b>칼 완료 3남단</b> = 칼 어간 · 완료 · 3인칭 남성 단수 =
+  "그가 ~했다". 낱말을 누르면 오른쪽 창에 조각마다 풀이와 해석 실마리가 나옵니다.</p>
+
+  <h3 id="gh-8" data-t="한 절 풀어 보기"><span class="n">8</span>한 절 풀어 보기 — 창세기 1:1</h3>
+  <div class="tw"><table>
+   <tr><th>원문</th><th>표시</th><th>풀이</th></tr>
+   <tr><td class="he">בְּ/רֵאשִׁית</td><td class="c">전+명 여단</td><td>~에 + 처음 → "태초에"</td></tr>
+   <tr><td class="he">בָּרָא</td><td class="c">칼 완료 3남단</td><td>"그가 창조하셨다"</td></tr>
+   <tr><td class="he">אֱלֹהִים</td><td class="c">명 남복</td><td>"하나님이" (꼴은 복수, 동사는 단수)</td></tr>
+   <tr><td class="he">אֵת</td><td class="c">목적</td><td>뒤가 목적어라는 표지</td></tr>
+   <tr><td class="he">הַ/שָּׁמַיִם</td><td class="c">관+명 남복</td><td>"그 하늘을"</td></tr>
+   <tr><td class="he">וְ/אֵת</td><td class="c">접+목적</td><td>"그리고" + 목적 표지</td></tr>
+   <tr><td class="he">הָ/אָרֶץ</td><td class="c">관+명 통단</td><td>"그 땅을"</td></tr>
+  </table></div>
+  <p>원문 순서대로 옮기면 "태초에 / 창조하셨다 / 하나님이 / 그 하늘과 / 그 땅을"입니다.
+  한국어 순서로 다시 놓으면 개역한글 "태초에 하나님이 천지를 창조하시니라"가 됩니다.</p>
+
+  <h3 id="gh-9" data-t="아람어"><span class="n">9</span>아람어 부분</h3>
+  <p>다니엘과 에스라의 아람어 본문에는 패널에 <b>아람어</b> 표시가 붙습니다. 다른 점은 두 가지입니다.</p>
+  <ul>
+   <li><b>어간 이름이 다릅니다.</b> 페알(=칼), 파엘(=피엘), 하펠·아펠(=히필), 히트페엘·이트파알(=재귀·수동) 정도만 알면 됩니다.</li>
+   <li><b>관사 대신 낱말 끝 <span class="he">א־</span></b>가 "그 ~"를 나타냅니다. 이것을 <b>한정형</b>이라 합니다:
+     <span class="he">מַלְכָּא</span> "그 왕".</li>
+  </ul>
+ </div>
+
+ <!-- ════════════════ 헬라어 ════════════════ -->
+ <div class="gm-doc" data-g="grk" hidden>
+  <p class="lead2">신약은 1세기 지중해 세계의 공용어였던 <b>코이네 헬라어</b>로 쓰였습니다.
+  히브리어와 달리 낱말의 <b>끝(어미)</b>이 문법을 거의 다 말해 줍니다.</p>
+
+  <h3 id="gg-1" data-t="문자·읽는 방향"><span class="n">1</span>문자와 읽는 방향</h3>
+  <ul>
+   <li><b>왼쪽에서 오른쪽으로</b> 읽습니다.</li>
+   <li>글자는 24개입니다: <span class="gr">α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω</span>.
+     <span class="gr">σ</span>는 낱말 끝에서 <span class="gr">ς</span>로 씁니다.</li>
+   <li>모음 앞의 작은 표시 중 <span class="gr">ἁ</span>(강숨표)는 'ㅎ' 소리, <span class="gr">ἀ</span>(약숨표)는
+     소리가 없습니다. <span class="gr">ὁ</span>는 "호"로 읽습니다. 그 밖의 <span class="gr">ά ὰ ᾶ</span>는 강세 표시입니다.</li>
+   <li>옛 사본은 대문자로 띄어쓰기 없이 썼고, 이 사이트 본문(SBLGNT)의 띄어쓰기·문장부호는 현대 편집자가 붙인 것입니다.</li>
+  </ul>
+
+  <h3 id="gg-2" data-t="어순과 어미"><span class="n">2</span>어순은 자유롭고, 어미가 역할을 정합니다</h3>
+  <p>헬라어는 낱말 끝이 바뀌어 "주어인지, 목적어인지"를 표시합니다. 한국어에서 조사(~이, ~을, ~의)가 하는 일을
+  <b>어미</b>가 합니다. 그래서 어순이 비교적 자유롭고, <b>앞으로 나온 낱말이 강조</b>되는 경우가 많습니다.</p>
+  <div class="tip">요한복음 1:1 <span class="gr">καὶ θεὸς ἦν ὁ λόγος</span> — 낱말 순서는 "하나님 / 이셨다 / 그 말씀"이지만,
+  관사 <span class="gr">ὁ</span>가 붙은 <span class="gr">λόγος</span>가 주어입니다. 그래서 "<b>말씀은</b> 하나님이셨다"로 읽고,
+  <span class="gr">θεὸς</span>가 앞에 나온 것은 강조입니다.</div>
+
+  <h3 id="gg-3" data-t="격"><span class="n">3</span>명사 · 관사 · 형용사 — 다섯 가지 격</h3>
+  <div class="tw"><table>
+   <tr><th>격</th><th>하는 일</th><th>한국어로</th><th>예</th></tr>
+   <tr><td class="c"><b>주격</b></td><td>주어 · 서술어</td><td>~이/가, ~은/는</td><td><span class="gr">ὁ λόγος</span> 그 말씀이</td></tr>
+   <tr><td class="c"><b>속격</b></td><td>소유 · 출처 · 관계</td><td>~의, ~에게서</td><td><span class="gr">τοῦ θεοῦ</span> 하나님의</td></tr>
+   <tr><td class="c"><b>여격</b></td><td>간접 목적 · 수단 · 장소 · 때</td><td>~에게, ~으로, ~에</td><td><span class="gr">ἐν ἀρχῇ</span> 태초에</td></tr>
+   <tr><td class="c"><b>대격</b></td><td>직접 목적 · 방향</td><td>~을/를, ~으로</td><td><span class="gr">τὸν κόσμον</span> 세상을</td></tr>
+   <tr><td class="c"><b>호격</b></td><td>부를 때</td><td>~여</td><td><span class="gr">κύριε</span> 주여</td></tr>
+  </table></div>
+  <ul>
+   <li>명사에는 <b>성</b>(남성·여성·중성)과 <b>수</b>(단수·복수)가 있습니다.</li>
+   <li><b>관사</b>(<span class="gr">ὁ ἡ τό</span>)는 명사와 성·수·격을 맞춥니다. 관사만 봐도 명사의 격을 알 수 있어 큰 도움이 됩니다.
+     관사는 늘 "그"로 옮기지는 않으며, 고유명사에도 붙습니다(<span class="gr">ὁ Ἰησοῦς</span>). "어떤(a)"에 해당하는 관사는 없습니다.</li>
+   <li><b>형용사 위치</b>: 관사와 함께 붙어 있으면 꾸밈 — <span class="gr">ὁ ποιμὴν ὁ καλός</span> "그 선한 목자"(요 10:11).
+     관사 밖에 따로 서 있으면 서술 — "~은 선하다".</li>
+  </ul>
+
+  <h3 id="gg-4" data-t="동사"><span class="n">4</span>동사 — 시제 · 태 · 법</h3>
+  <p>동사 하나에 <b>시제 + 태 + 법 + 인칭·수</b>가 다 들어 있습니다. 주어가 어미에 들어 있어서 대명사를 자주 생략하고,
+  대명사를 따로 쓰면 강조입니다(<span class="gr">ἐγώ εἰμι</span> "<b>내가</b> 바로 ~이다").</p>
+  <h4>시제 — 동작을 어떻게 보는가</h4>
+  <div class="tw"><table>
+   <tr><th>시제</th><th>보는 방식</th><th>읽는 법</th></tr>
+   <tr><td class="c"><b>현재</b></td><td>진행 · 반복</td><td>"~하고 있다", "~하곤 한다"</td></tr>
+   <tr><td class="c"><b>미완료</b></td><td>과거의 진행 · 반복</td><td>"~하고 있었다"</td></tr>
+   <tr><td class="c"><b>부정과거</b><br>(아오리스트)</td><td>동작을 하나의 전체로 봄</td><td>대개 "~했다". 신약에서 가장 흔한 과거형</td></tr>
+   <tr><td class="c"><b>미래</b></td><td>앞으로 일어날 일</td><td>"~할 것이다"</td></tr>
+   <tr><td class="c"><b>완료</b></td><td>끝난 일의 결과가 지금까지 이어짐</td><td><span class="gr">τετέλεσται</span> "다 이루었다"(요 19:30) — 이루어져 지금도 그 상태</td></tr>
+   <tr><td class="c"><b>과거완료</b></td><td>과거 어느 때까지 결과가 이어짐</td><td>"~해 있었다"</td></tr>
+  </table></div>
+  <div class="tip">"부정과거"의 '부정(不定)'은 "아니다"가 아니라 <b>"정하지 않음"</b>이라는 뜻입니다.
+  동작이 진행 중이었는지 반복됐는지를 따로 말하지 않고, 한 번의 사건처럼 전체로 묶어 말한다는 뜻입니다.</div>
+  <h4>태 — 누가 하는가</h4>
+  <ul>
+   <li><b>능동</b>: 주어가 한다.</li>
+   <li><b>중동</b>(중간태): 주어가 자기에게, 자기를 위해 한다. 다만 꼴만 중동이고 뜻은 능동인 동사도 많습니다(<span class="gr">ἔρχομαι</span> 오다).</li>
+   <li><b>수동</b>: 주어가 당한다. 행위자를 밝히지 않은 수동은 하나님이 하시는 일을 에둘러 말한 것으로 읽기도 합니다
+     (<span class="gr">παρακληθήσονται</span> "위로를 받을 것이다", 마 5:4).</li>
+  </ul>
+  <h4>법 — 어떤 말투인가</h4>
+  <div class="tw"><table>
+   <tr><th>법</th><th>쓰임</th></tr>
+   <tr><td class="c"><b>직설법</b></td><td>사실을 말함</td></tr>
+   <tr><td class="c"><b>가정법</b></td><td>가능 · 목적 · 조건. <span class="gr">ἵνα</span>+가정법 "~하기 위하여", <span class="gr">ἐάν</span>+가정법 "만일 ~하면"</td></tr>
+   <tr><td class="c"><b>명령법</b></td><td>명령. 현재 명령은 "계속 ~하라"의 느낌, 부정과거 명령은 그 행동 자체를 명함</td></tr>
+   <tr><td class="c"><b>기원법</b></td><td>소원. <span class="gr">μὴ γένοιτο</span> "그럴 수 없느니라"(롬 6:2)</td></tr>
+   <tr><td class="c"><b>부정사</b></td><td>"~하는 것", "~하기 위해"</td></tr>
+   <tr><td class="c"><b>분사</b></td><td>다음 장 참고</td></tr>
+  </table></div>
+
+  <h3 id="gg-5" data-t="분사"><span class="n">5</span>분사 — 신약을 읽는 열쇠</h3>
+  <p>분사는 동사에서 나온 형용사로, 신약에 아주 많이 나옵니다.</p>
+  <ul>
+   <li><b>관사 + 분사 = "~하는 자"</b>: <span class="gr">πᾶς ὁ πιστεύων</span> "믿는 자마다"(요 3:16).</li>
+   <li><b>부사처럼</b> 쓰여 때·이유·방법을 나타냅니다: "~하면서", "~한 후에", "~하므로". 어느 뜻인지는 문맥으로 정합니다.</li>
+   <li>분사의 시제는 주동사와의 <b>앞뒤 관계</b>를 보여 줍니다. 부정과거 분사는 대개 "~한 후에", 현재 분사는 "~하면서".</li>
+  </ul>
+
+  <h3 id="gg-6" data-t="전치사"><span class="n">6</span>전치사 — 뒤에 오는 격에 따라 뜻이 달라집니다</h3>
+  <div class="tw"><table>
+   <tr><th>전치사</th><th>+ 속격</th><th>+ 여격</th><th>+ 대격</th></tr>
+   <tr><td class="gr">ἐν</td><td></td><td>~안에, ~으로</td><td></td></tr>
+   <tr><td class="gr">εἰς</td><td></td><td></td><td>~안으로, ~을 향해</td></tr>
+   <tr><td class="gr">ἐκ (ἐξ)</td><td>~에서부터(밖으로)</td><td></td><td></td></tr>
+   <tr><td class="gr">ἀπό</td><td>~로부터</td><td></td><td></td></tr>
+   <tr><td class="gr">διά</td><td>~을 통하여</td><td></td><td>~때문에</td></tr>
+   <tr><td class="gr">ὑπέρ</td><td>~을 위하여</td><td></td><td>~보다 위에</td></tr>
+   <tr><td class="gr">κατά</td><td>~을 거슬러</td><td></td><td>~을 따라</td></tr>
+   <tr><td class="gr">μετά</td><td>~와 함께</td><td></td><td>~후에</td></tr>
+   <tr><td class="gr">περί</td><td>~에 관하여</td><td></td><td>~둘레에</td></tr>
+   <tr><td class="gr">ὑπό</td><td>~에 의해</td><td></td><td>~아래</td></tr>
+   <tr><td class="gr">πρός</td><td></td><td></td><td>~에게, ~을 향해, ~와 함께</td></tr>
+   <tr><td class="gr">ἐπί</td><td>~위에</td><td>~위에, ~에 근거하여</td><td>~위로, ~에게</td></tr>
+  </table></div>
+  <p>요한복음 1:1 <span class="gr">πρὸς τὸν θεόν</span> — <span class="gr">πρός</span> + 대격으로, "하나님과 <b>함께</b>"(하나님을 향해) 계셨다는 뜻입니다.</p>
+
+  <h3 id="gg-7" data-t="작은 낱말"><span class="n">7</span>자주 나오는 작은 낱말</h3>
+  <div class="tw"><table>
+   <tr><th>낱말</th><th>뜻</th></tr>
+   <tr><td class="gr">καί</td><td>그리고 · 또한 · 곧</td></tr>
+   <tr><td class="gr">δέ</td><td>그런데 · 그러나 (가벼운 전환, 문장 둘째 자리에 옴)</td></tr>
+   <tr><td class="gr">γάρ</td><td>왜냐하면 · 이는 (둘째 자리)</td></tr>
+   <tr><td class="gr">οὖν</td><td>그러므로 (둘째 자리)</td></tr>
+   <tr><td class="gr">ἀλλά</td><td>그러나 · 도리어 (강한 대조)</td></tr>
+   <tr><td class="gr">ὅτι</td><td>~라는 것 · 왜냐하면 · (인용 부호처럼) "…"</td></tr>
+   <tr><td class="gr">ἵνα</td><td>~하기 위하여 · ~하도록</td></tr>
+   <tr><td class="gr">οὐ / μή</td><td>아니 — <span class="gr">οὐ</span>는 직설법, <span class="gr">μή</span>는 그 밖에서. 질문에서 <span class="gr">οὐ</span>는 "그렇지?", <span class="gr">μή</span>는 "아니지?"를 기대</td></tr>
+  </table></div>
+
+  <h3 id="gg-8" data-t="이 사이트 표시·예문"><span class="n">8</span>이 사이트 표시 읽는 법과 예문</h3>
+  <p>신약 낱말을 누르면 오른쪽 창의 '문법'에 이런 꼴로 나옵니다.</p>
+  <ul>
+   <li>명사·관사·형용사: <b>품사 · 격 · 수 · 성</b> — "명사·대격·단수·여성"</li>
+   <li>동사: <b>시제+태+법 · 수</b> — "동사·부정과거능동직설법·단수", "동사·현재능동분사·복수"</li>
+   <li><b>중동</b> = 중간태, <b>불변화사</b> = 꼴이 바뀌지 않는 작은 기능어</li>
+  </ul>
+  <div class="tip">신약 문법 표시는 아직 정비 중이라 일부 낱말에 빠진 칸이 있거나 영문 약어가 보일 수 있습니다.
+  구약처럼 낱말 아래 표시를 붙이는 작업을 준비하고 있습니다.</div>
+  <h4>요한복음 1:1 앞부분</h4>
+  <div class="tw"><table>
+   <tr><th>원문</th><th>문법</th><th>풀이</th></tr>
+   <tr><td class="gr">Ἐν</td><td class="c">전치사 (+여격)</td><td>~에</td></tr>
+   <tr><td class="gr">ἀρχῇ</td><td class="c">명사·여격·단수·여성</td><td>태초 → "태초에"</td></tr>
+   <tr><td class="gr">ἦν</td><td class="c">미완료 직설법 3인칭 단수</td><td>"계셨다" — <span class="gr">εἰμί</span>(있다)는 부정과거가 없어 과거를 늘 이 꼴로 씁니다</td></tr>
+   <tr><td class="gr">ὁ</td><td class="c">관사·주격·단수·남성</td><td>그</td></tr>
+   <tr><td class="gr">λόγος</td><td class="c">명사·주격·단수·남성</td><td>"말씀이" (주어)</td></tr>
+  </table></div>
+  <p>"태초에 / 계셨다 / 그 말씀이" → 개역한글 "태초에 말씀이 계시니라".</p>
+ </div>
+
+ </div>
+</div>
+</div>
+
 <div class="modal" id="give-modal" role="dialog" aria-modal="true" aria-labelledby="give-h">
 <div class="sheet">
   <button class="x" id="give-x" aria-label="닫기">×</button>
@@ -901,17 +1275,39 @@ giveModal.addEventListener('click',e=>{if(e.target===giveModal)closeModal(giveMo
 document.getElementById('give-link').addEventListener('click',()=>trackEvent('give_click',{from:'footer'}));
 buildGive();
 
-/* ── 장별 주석 ─────────────────────────────────────────────────────────
-   퍼블릭도메인 주석(기본 아담 클라크)을 Worker가 가져와 한국어로 옮겨 준다.
-   한 번 번역된 장은 서버 KV에 남으므로 다음부터는 즉시 뜬다.
+/* ── 문법 안내 ─────────────────────────────────────────────────────────
+   지금 보고 있는 쪽(구약/신약)의 문법을 먼저 연다. 목차는 탭을 바꿀 때마다
+   그 문서의 h3 에서 다시 만든다. 주소의 # 를 건드리지 않도록 링크 대신
+   scrollIntoView 를 쓴다. */
+const gramModal=document.getElementById('gram-modal');
+function showGram(g){
+  gramModal.querySelectorAll('.gm-tabs button').forEach(b=>{const on=b.dataset.g===g;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  gramModal.querySelectorAll('.gm-doc').forEach(d=>{d.hidden=d.dataset.g!==g;});
+  const toc=document.getElementById('gm-toc');toc.innerHTML='';
+  gramModal.querySelectorAll(`.gm-doc[data-g="${g}"] h3`).forEach(h=>{
+    const b=document.createElement('button');b.type='button';
+    b.textContent=h.querySelector('.n').textContent+'. '+(h.dataset.t||h.textContent);
+    b.onclick=()=>h.scrollIntoView({behavior:'smooth',block:'start'});
+    toc.appendChild(b);
+  });
+  gramModal.querySelector('.sheet').scrollTop=0;
+}
+document.getElementById('gram-btn').onclick=()=>{
+  const g=curTest==='nt'?'grk':'heb';showGram(g);openModal(gramModal);trackEvent('grammar_open',{lang:g});
+};
+gramModal.querySelectorAll('.gm-tabs button').forEach(b=>b.onclick=()=>{showGram(b.dataset.g);trackEvent('grammar_tab',{lang:b.dataset.g});});
+document.getElementById('gram-x').onclick=()=>closeModal(gramModal);
+gramModal.addEventListener('click',e=>{if(e.target===gramModal)closeModal(gramModal);});
 
-   재시도가 필요한 이유: Anthropic 앞단이 Cloudflare Workers 의 나가는 IP
-   일부를 403 으로 막는데, 그 차단이 워커 인스턴스에 고정되어 있다. 워커 안에서
-   다시 걸어도 같은 IP로 나가 소용이 없고, 요청 자체를 새로 보내야 다른
-   인스턴스에 걸린다. 한 번에 약 40% 확률이라 여러 번 걸면 거의 붙는다. */
-/* 403 은 Anthropic 문턱에서 거절되는 것이라 토큰이 나가지 않는다. 즉 재시도는
-   공짜다. 실측 성공률이 3분의 1 남짓이라 넉넉히 걸어야 조각이 많은 장도 끝까지
-   간다. 보통 두세 번이면 붙고, 실패는 1초쯤이라 체감 지연도 크지 않다. */
+/* ── 장별 주석 ─────────────────────────────────────────────────────────
+   퍼블릭도메인 주석(기본 제이미슨-파우셋-브라운)을 Worker가 가져와 한국어로
+   옮겨 준다. 한 번 번역된 장은 서버 KV에 남으므로 다음부터는 즉시 뜬다.
+
+   재시도: 예전에는 403 "Request not allowed" 가 자주 났다. 원인은 워커가 홍콩
+   데이터센터에서 실행될 때였고(홍콩은 Anthropic 미지원 지역), 지금은
+   server/wrangler.toml 의 [placement] 로 실행 위치를 미국 동부에 고정해 사라졌다.
+   재시도는 남은 일시 오류(연결 끊김, 혼잡)를 위한 안전망이다. 거절된 요청은
+   토큰이 나가지 않으므로 넉넉히 걸어도 비용이 들지 않는다. */
 const COMM_TRIES = 40, COMM_KEY = 'miqra.comm.';
 const SEP = String.fromCharCode(10,10);   /* 조각 사이 빈 줄 */
 const comm = document.getElementById('comm');
@@ -1044,6 +1440,7 @@ document.getElementById('comm-x').onclick=closeCpanel;
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   if(comm.classList.contains('on'))closeCpanel();
+  else if(gramModal.classList.contains('on'))closeModal(gramModal);
   else if(giveModal.classList.contains('on'))closeModal(giveModal);
   else if(guide.classList.contains('on'))closeGuide();
 });
